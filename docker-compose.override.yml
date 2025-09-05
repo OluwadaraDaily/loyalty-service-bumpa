@@ -1,0 +1,22 @@
+# Development override - uncomment services you don't need during development
+version: '3.8'
+
+services:
+  # Comment out nginx for development if you want to access services directly
+  # nginx:
+  #   profiles: ["production"]
+
+  # Development specific configurations
+  backend:
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    volumes:
+      - ./storage/logs:/var/www/storage/logs
+    
+  frontend:
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./resources:/app/resources
+      - ./public:/app/public
