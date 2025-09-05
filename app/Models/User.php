@@ -81,4 +81,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserBadge::class);
     }
+
+    public function getCurrentBadge()
+    {
+        $currentBadge = $this->badges()
+            ->wherePivot('unlocked', true)
+            ->latest('pivot.unlocked_at')
+            ->first();
+
+        return $currentBadge ? [
+            'id' => $currentBadge->id,
+            'name' => $currentBadge->name,
+            'icon_url' => $currentBadge->icon_url
+        ] : null;
+    }
 }
