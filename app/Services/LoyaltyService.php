@@ -10,14 +10,28 @@ use App\Models\Purchase;
 use App\Models\User;
 use App\Models\UserAchievement;
 use App\Models\UserBadge;
+use App\Services\CashbackService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class LoyaltyService
 {
+    private CashbackService $cashbackService;
+    private array $newlyUnlockedAchievements = [];
+    private array $newlyUnlockedBadges = [];
+
+    public function __construct(CashbackService $cashbackService)
+    {
+        $this->cashbackService = $cashbackService;
+    }
+
     public function processPurchaseEvent(array $purchaseData): void
     {
         try {
+            // Reset tracking arrays for this request
+            $this->newlyUnlockedAchievements = [];
+            $this->newlyUnlockedBadges = [];
+            
             DB::beginTransaction();
 
             $user = User::find($purchaseData['user_id']);
@@ -32,6 +46,8 @@ class LoyaltyService
             $this->checkAndUnlockBadges($user);
 
             DB::commit();
+
+            $this->processCashbackIfEligible($user, $purchase);
             
             Log::info('Successfully processed purchase event', [
                 'user_id' => $user->id,
@@ -88,6 +104,9 @@ class LoyaltyService
                     'unlocked_at' => now()
                 ]);
 
+                // Track newly unlocked achievement for cashback calculation
+                $this->newlyUnlockedAchievements[] = $achievement;
+
                 event(new AchievementUnlocked($user, $achievement));
                 
                 Log::info('Achievement unlocked', [
@@ -131,6 +150,9 @@ class LoyaltyService
                     'unlocked' => true,
                     'unlocked_at' => now()
                 ]);
+
+                // Track newly unlocked badge for cashback calculation
+                $this->newlyUnlockedBadges[] = $badge;
 
                 event(new BadgeUnlocked($user, $badge));
                 
@@ -248,5 +270,29 @@ class LoyaltyService
                 })->count()
             ];
         })->toArray();
+    }
+
+    private function processCashbackIfEligible(User $user, Purchase $purchase): void
+    {
+        try {
+            $cashback = $this->cashbackService->processCashbackForPurchase($user, $purchase, $this->newlyUnlockedAchievements, $this->newlyUnlockedBadges);
+            
+            if ($cashback) {
+                Log::info('Cashback processing initiated', [
+                    'user_id' => $user->id,
+                    'purchase_id' => $purchase->id,
+                    'cashback_id' => $cashback->id,
+                    'amount' => $cashback->amount,
+                    'triggered_by_achievements' => collect($this->newlyUnlockedAchievements)->pluck('name')->toArray(),
+                    'triggered_by_badges' => collect($this->newlyUnlockedBadges)->pluck('name')->toArray()
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to process cashback for purchase', [
+                'user_id' => $user->id,
+                'purchase_id' => $purchase->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

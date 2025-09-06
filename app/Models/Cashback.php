@@ -15,13 +15,20 @@ class Cashback extends Model
         'purchase_id',
         'amount',
         'currency',
+        'idempotency_key',
+        'transaction_reference',
+        'payment_provider',
         'status',
+        'retry_count',
+        'last_retry_at',
+        'failure_reason',
         'paid_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
+        'last_retry_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
