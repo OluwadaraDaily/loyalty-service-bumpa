@@ -22,8 +22,9 @@ class SendTestPurchaseEvent extends Command
         $currency = $this->option('currency');
         $paymentMethod = $this->option('method');
 
-        if (!is_numeric($userId) || !is_numeric($amount)) {
+        if (! is_numeric($userId) || ! is_numeric($amount)) {
             $this->error('User ID and amount must be numeric values');
+
             return 1;
         }
 
@@ -32,31 +33,32 @@ class SendTestPurchaseEvent extends Command
             'amount' => (float) $amount,
             'currency' => $currency,
             'payment_method' => $paymentMethod,
-            'payment_reference' => 'test_' . uniqid(),
+            'payment_reference' => 'test_'.uniqid(),
             'status' => 'completed',
             'timestamp' => now()->toISOString(),
             'metadata' => [
                 'source' => 'test_command',
-                'generated_at' => now()->toISOString()
-            ]
+                'generated_at' => now()->toISOString(),
+            ],
         ];
 
         try {
             InMemoryQueueService::addPurchaseEvent($purchaseData);
-            
+
             $this->info('Test purchase event added to queue successfully!');
             $this->table(
                 ['Field', 'Value'],
                 [
                     ['User ID', $userId],
-                    ['Amount', $amount . ' ' . $currency],
+                    ['Amount', $amount.' '.$currency],
                     ['Payment Method', $paymentMethod],
                     ['Reference', $purchaseData['payment_reference']],
                 ]
             );
-            
+
         } catch (\Exception $e) {
-            $this->error('Failed to add test purchase event: ' . $e->getMessage());
+            $this->error('Failed to add test purchase event: '.$e->getMessage());
+
             return 1;
         }
 

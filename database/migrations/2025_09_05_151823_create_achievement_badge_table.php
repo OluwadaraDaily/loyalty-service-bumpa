@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('achievement_id')->constrained()->onDelete('cascade');
             $table->foreignId('badge_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->unique(['achievement_id', 'badge_id'], 'unique_achievement_badge');
         });
     }

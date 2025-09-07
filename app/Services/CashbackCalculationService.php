@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use App\Models\Purchase;
 use App\Models\Achievement;
 use App\Models\Badge;
+use App\Models\Purchase;
+use App\Models\User;
 use App\Models\UserAchievement;
 use App\Models\UserBadge;
 use Illuminate\Support\Facades\Log;
@@ -13,8 +13,11 @@ use Illuminate\Support\Facades\Log;
 class CashbackCalculationService
 {
     private array $achievementRates;
+
     private array $badgeMultipliers;
+
     private float $maxCashbackAmount;
+
     private float $minCashbackAmount;
 
     public function __construct()
@@ -30,15 +33,15 @@ class CashbackCalculationService
         // Calculate base cashback (always eligible)
         $baseCashbackRate = config('payment.cashback.base_rate', 0.01); // 1% default base rate
         $baseCashbackAmount = $purchase->amount * $baseCashbackRate;
-        
+
         // Add bonus cashback for newly unlocked achievements
         $bonusCashbackAmount = 0;
-        if (!empty($newlyUnlockedAchievements)) {
+        if (! empty($newlyUnlockedAchievements)) {
             $bonusCashbackAmount += $this->calculateBonusCashback($purchase, $newlyUnlockedAchievements);
         }
-        
+
         $totalCashbackAmount = $baseCashbackAmount + $bonusCashbackAmount;
-        
+
         // Apply badge multiplier if user has unlocked badges
         $multiplier = $this->calculateBadgeMultiplierForUser($user, $newlyUnlockedBadges);
         $finalAmount = $totalCashbackAmount * $multiplier;
@@ -53,11 +56,11 @@ class CashbackCalculationService
             'multiplier' => $multiplier,
             'final_amount' => $finalAmount,
             'newly_unlocked_achievements' => collect($newlyUnlockedAchievements)->pluck('name')->toArray(),
-            'newly_unlocked_badges' => collect($newlyUnlockedBadges)->pluck('name')->toArray()
+            'newly_unlocked_badges' => collect($newlyUnlockedBadges)->pluck('name')->toArray(),
         ]);
 
         $eligible = $finalAmount >= $this->minCashbackAmount;
-        
+
         return [
             'eligible' => $eligible,
             'amount' => $finalAmount,
@@ -67,8 +70,8 @@ class CashbackCalculationService
             'multiplier' => $multiplier,
             'triggered_by' => [
                 'achievements' => collect($newlyUnlockedAchievements)->pluck('name')->toArray(),
-                'badges' => collect($newlyUnlockedBadges)->pluck('name')->toArray()
-            ]
+                'badges' => collect($newlyUnlockedBadges)->pluck('name')->toArray(),
+            ],
         ];
     }
 
@@ -78,11 +81,13 @@ class CashbackCalculationService
 
         foreach ($this->achievementRates as $achievementName => $rate) {
             $achievement = Achievement::where('name', $achievementName)->first();
-            if (!$achievement) continue;
+            if (! $achievement) {
+                continue;
+            }
 
             $userAchievement = UserAchievement::where([
                 'user_id' => $user->id,
-                'achievement_id' => $achievement->id
+                'achievement_id' => $achievement->id,
             ])->first();
 
             $scenarios[] = [
@@ -92,17 +97,19 @@ class CashbackCalculationService
                 'unlocked' => $userAchievement?->unlocked ?? false,
                 'progress' => $userAchievement?->progress ?? 0,
                 'required' => $achievement->points_required,
-                'description' => $achievement->description
+                'description' => $achievement->description,
             ];
         }
 
         foreach ($this->badgeMultipliers as $badgeName => $multiplier) {
             $badge = Badge::where('name', $badgeName)->first();
-            if (!$badge) continue;
+            if (! $badge) {
+                continue;
+            }
 
             $userBadge = UserBadge::where([
                 'user_id' => $user->id,
-                'badge_id' => $badge->id
+                'badge_id' => $badge->id,
             ])->first();
 
             $scenarios[] = [
@@ -110,7 +117,7 @@ class CashbackCalculationService
                 'name' => $badgeName,
                 'multiplier' => $multiplier,
                 'unlocked' => $userBadge?->unlocked ?? false,
-                'description' => $badge->description
+                'description' => $badge->description,
             ];
         }
 
@@ -153,7 +160,7 @@ class CashbackCalculationService
             Log::debug('Applied achievement bonus cashback rate', [
                 'achievement' => $achievementName,
                 'rate' => $rate,
-                'total_rate' => $totalRate
+                'total_rate' => $totalRate,
             ]);
         }
 
@@ -173,7 +180,7 @@ class CashbackCalculationService
             Log::debug('Applied newly unlocked badge multiplier', [
                 'badge' => $badgeName,
                 'multiplier' => $multiplier,
-                'max_multiplier' => $maxMultiplier
+                'max_multiplier' => $maxMultiplier,
             ]);
         }
 
@@ -200,7 +207,7 @@ class CashbackCalculationService
             Log::debug('Applied achievement cashback rate', [
                 'achievement' => $achievement['name'],
                 'rate' => $rate,
-                'total_rate' => $totalRate
+                'total_rate' => $totalRate,
             ]);
         }
 
@@ -218,7 +225,7 @@ class CashbackCalculationService
             Log::debug('Applied badge multiplier', [
                 'badge' => $badge['name'],
                 'multiplier' => $multiplier,
-                'max_multiplier' => $maxMultiplier
+                'max_multiplier' => $maxMultiplier,
             ]);
         }
 
@@ -228,13 +235,13 @@ class CashbackCalculationService
     private function applyCashbackLimits(float $amount): float
     {
         $originalAmount = $amount;
-        
+
         if ($amount > $this->maxCashbackAmount) {
             $amount = $this->maxCashbackAmount;
             Log::info('Cashback amount capped at maximum', [
                 'original' => $originalAmount,
                 'capped' => $amount,
-                'max_limit' => $this->maxCashbackAmount
+                'max_limit' => $this->maxCashbackAmount,
             ]);
         }
 
@@ -243,7 +250,7 @@ class CashbackCalculationService
             Log::info('Cashback amount below minimum threshold', [
                 'calculated' => $originalAmount,
                 'min_threshold' => $this->minCashbackAmount,
-                'final' => $amount
+                'final' => $amount,
             ]);
         }
 
@@ -254,7 +261,7 @@ class CashbackCalculationService
     {
         return [
             'min_amount' => $this->minCashbackAmount,
-            'max_amount' => $this->maxCashbackAmount
+            'max_amount' => $this->maxCashbackAmount,
         ];
     }
 
@@ -262,7 +269,7 @@ class CashbackCalculationService
     {
         return [
             'achievement_rates' => $this->achievementRates,
-            'badge_multipliers' => $this->badgeMultipliers
+            'badge_multipliers' => $this->badgeMultipliers,
         ];
     }
 }

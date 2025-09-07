@@ -22,8 +22,8 @@ class CashbackInitiated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('user.' . $this->user->id),
-            new Channel('cashbacks')
+            new Channel('user.'.$this->user->id),
+            new Channel('cashbacks'),
         ];
     }
 
@@ -37,14 +37,14 @@ class CashbackInitiated implements ShouldBroadcast
                 'currency' => $this->cashback->currency,
                 'status' => $this->cashback->status,
                 'idempotency_key' => $this->cashback->idempotency_key,
-                'created_at' => $this->cashback->created_at
+                'created_at' => $this->cashback->created_at,
             ],
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
-                'email' => $this->user->email
+                'email' => $this->user->email,
             ],
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
     }
 

@@ -7,7 +7,7 @@ return [
         'insufficient_funds_rate' => env('PAYMENT_MOCK_INSUFFICIENT_FUNDS_RATE', 0.05),
         'processing_delay_ms' => [
             env('PAYMENT_MOCK_MIN_DELAY', 100),
-            env('PAYMENT_MOCK_MAX_DELAY', 500)
+            env('PAYMENT_MOCK_MAX_DELAY', 500),
         ],
     ],
 
@@ -28,10 +28,10 @@ return [
 
         'max_cashback_amount' => env('CASHBACK_MAX_AMOUNT', 10000), // 10,000 NGN
         'min_cashback_amount' => env('CASHBACK_MIN_AMOUNT', 500),    // 500 NGN
-        
+
         'retry' => [
             'max_attempts' => env('CASHBACK_MAX_RETRY_ATTEMPTS', 3),
             'delay_minutes' => [0, 5, 30], // immediate, 5 min, 30 min
         ],
-    ]
+    ],
 ];

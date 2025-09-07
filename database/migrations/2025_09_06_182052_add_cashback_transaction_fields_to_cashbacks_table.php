@@ -30,11 +30,11 @@ return new class extends Migration
         Schema::table('cashbacks', function (Blueprint $table) {
             $table->dropColumn([
                 'idempotency_key',
-                'transaction_reference', 
+                'transaction_reference',
                 'payment_provider',
                 'retry_count',
                 'last_retry_at',
-                'failure_reason'
+                'failure_reason',
             ]);
             $table->enum('status', ['pending', 'approved', 'paid'])->default('pending')->change();
         });

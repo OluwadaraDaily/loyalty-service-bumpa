@@ -23,7 +23,7 @@ class ProcessCashbackRetry implements ShouldQueue
     {
         Log::info('Processing cashback retry job', [
             'cashback_id' => $this->cashback->id,
-            'retry_count' => $this->cashback->retry_count
+            'retry_count' => $this->cashback->retry_count,
         ]);
 
         try {
@@ -31,9 +31,9 @@ class ProcessCashbackRetry implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Cashback retry job failed', [
                 'cashback_id' => $this->cashback->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             throw $e;
         }
     }
@@ -42,7 +42,7 @@ class ProcessCashbackRetry implements ShouldQueue
     {
         Log::error('Cashback retry job permanently failed', [
             'cashback_id' => $this->cashback->id,
-            'exception' => $exception->getMessage()
+            'exception' => $exception->getMessage(),
         ]);
     }
 }

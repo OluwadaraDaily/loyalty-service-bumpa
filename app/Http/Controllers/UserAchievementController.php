@@ -18,7 +18,7 @@ class UserAchievementController extends Controller
                 $progress = $achievement->pivot->progress ?? 0;
                 $pointsRequired = $achievement->points_required ?? 1;
                 $progressPercentage = min(100, round(($progress / $pointsRequired) * 100, 1));
-                
+
                 return [
                     'id' => $achievement->id,
                     'name' => $achievement->name,
@@ -44,7 +44,7 @@ class UserAchievementController extends Controller
             ->map(function ($badge) {
                 $progress = $badge->pivot->progress ?? 0;
                 $pointsRequired = $badge->points_required ?? 1;
-                
+
                 // If badge is unlocked, progress percentage should be 100%
                 if ($badge->pivot->unlocked) {
                     $progressPercentage = 100;
@@ -52,7 +52,7 @@ class UserAchievementController extends Controller
                 } else {
                     $progressPercentage = min(100, round(($progress / $pointsRequired) * 100, 1));
                 }
-                
+
                 return [
                     'id' => $badge->id,
                     'name' => $badge->name,
@@ -117,10 +117,10 @@ class UserAchievementController extends Controller
             ->wherePivot('unlocked', false)
             ->first();
 
-        if (!$achievement) {
+        if (! $achievement) {
             return response()->json([
                 'success' => false,
-                'message' => 'No achievements available to unlock'
+                'message' => 'No achievements available to unlock',
             ]);
         }
 
@@ -135,13 +135,13 @@ class UserAchievementController extends Controller
 
         foreach ($badges as $badge) {
             $userBadge = $user->badges()->where('badge_id', $badge->id)->first();
-            if (!$userBadge || !$userBadge->pivot->unlocked) {
+            if (! $userBadge || ! $userBadge->pivot->unlocked) {
                 $user->badges()->syncWithoutDetaching([
                     $badge->id => [
                         'progress' => $badge->points_required,
                         'unlocked' => true,
                         'unlocked_at' => now(),
-                    ]
+                    ],
                 ]);
                 $unlockedBadges[] = [
                     'id' => $badge->id,
@@ -185,39 +185,39 @@ class UserAchievementController extends Controller
         try {
             // Add to queue
             InMemoryQueueService::addPurchaseEvent($validated);
-            
+
             // Immediately process the queue and get results
             $queueService = app(InMemoryQueueService::class);
             $results = $queueService->processQueue();
-            
+
             // Get the first result (should only be one for this purchase)
             $result = $results[0] ?? ['success' => false];
-            
+
             Log::info('Purchase event processed immediately via API', [
                 'user_id' => $user->id,
                 'amount' => $validated['amount'],
                 'product_name' => $validated['metadata']['product_name'] ?? 'Unknown',
                 'achievements_unlocked' => count($result['newly_unlocked_achievements'] ?? []),
-                'badges_unlocked' => count($result['newly_unlocked_badges'] ?? [])
+                'badges_unlocked' => count($result['newly_unlocked_badges'] ?? []),
             ]);
 
             // Force refresh of user relationships to get updated data
             $user->refresh();
             $user->load(['achievements.badges', 'badges']);
-            
+
             $response = [
                 'success' => true,
                 'message' => 'Purchase processed successfully',
                 'purchase_reference' => $validated['payment_reference'],
-                'should_refresh' => true // Always refresh after purchase
+                'should_refresh' => true, // Always refresh after purchase
             ];
 
             // Add achievement/badge unlock information if any
-            if (!empty($result['newly_unlocked_achievements'])) {
+            if (! empty($result['newly_unlocked_achievements'])) {
                 $response['newly_unlocked_achievements'] = $result['newly_unlocked_achievements'];
                 $response['show_unlock_animation'] = true;
             }
-            if (!empty($result['newly_unlocked_badges'])) {
+            if (! empty($result['newly_unlocked_badges'])) {
                 $response['newly_unlocked_badges'] = $result['newly_unlocked_badges'];
                 $response['show_unlock_animation'] = true;
             }
@@ -227,12 +227,12 @@ class UserAchievementController extends Controller
             Log::error('Failed to process purchase via API', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'data' => $validated
+                'data' => $validated,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process purchase'
+                'message' => 'Failed to process purchase',
             ], 500);
         }
     }

@@ -22,21 +22,22 @@ class ProcessQueueEvents extends Command
     public function handle(): int
     {
         $queueSize = $this->queueService->getQueueSize();
-        
+
         if ($queueSize === 0) {
             $this->info('No events in queue to process.');
+
             return 0;
         }
 
         $this->info("Processing {$queueSize} events from queue...");
-        
+
         $results = $this->queueService->processQueue();
-        
+
         $successful = collect($results)->where('success', true)->count();
         $failed = collect($results)->where('success', false)->count();
-        
+
         $this->info("Queue processing completed! Successful: {$successful}, Failed: {$failed}");
-        
+
         return 0;
     }
 }

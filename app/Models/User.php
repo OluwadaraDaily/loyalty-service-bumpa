@@ -94,7 +94,7 @@ class User extends Authenticatable
         return $currentBadge ? [
             'id' => $currentBadge->id,
             'name' => $currentBadge->name,
-            'icon_url' => $currentBadge->icon_url
+            'icon_url' => $currentBadge->icon_url,
         ] : null;
     }
 }

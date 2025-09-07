@@ -99,7 +99,7 @@ class LoyaltySystemSeeder extends Seeder
         ]);
 
         $this->command->info('Loyalty system seeded successfully!');
-        $this->command->info('Created ' . Achievement::count() . ' achievements');
-        $this->command->info('Created ' . Badge::count() . ' badges');
+        $this->command->info('Created '.Achievement::count().' achievements');
+        $this->command->info('Created '.Badge::count().' badges');
     }
 }

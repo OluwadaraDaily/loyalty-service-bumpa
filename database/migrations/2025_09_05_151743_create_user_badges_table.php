@@ -18,7 +18,7 @@ return new class extends Migration
             $table->boolean('unlocked')->default(false);
             $table->timestamp('unlocked_at')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'badge_id'], 'unique_user_badge');
         });
     }

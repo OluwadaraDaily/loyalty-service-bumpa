@@ -14,7 +14,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // General authenticated routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    
+
     // User-specific routes
     Route::middleware('role:user')->prefix('users')->group(function () {
         Route::get('{user}/achievements', [UserAchievementController::class, 'index']);
@@ -22,7 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('{user}/simulate-achievement', [UserAchievementController::class, 'simulateAchievement']);
         Route::post('{user}/purchase', [UserAchievementController::class, 'purchase']);
     });
-    
+
     // Admin-specific routes
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('users/achievements', [AdminAchievementController::class, 'index']);

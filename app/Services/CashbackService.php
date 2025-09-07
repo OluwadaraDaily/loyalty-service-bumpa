@@ -15,7 +15,9 @@ use Illuminate\Support\Str;
 class CashbackService
 {
     private CashbackCalculationService $calculationService;
+
     private MockPaymentService $paymentService;
+
     private array $retryConfig;
 
     public function __construct(
@@ -32,26 +34,28 @@ class CashbackService
         try {
             $cashbackCalculation = $this->calculationService->calculateCashbackForPurchase($user, $purchase, $newlyUnlockedAchievements, $newlyUnlockedBadges);
 
-            if (!$cashbackCalculation['eligible']) {
+            if (! $cashbackCalculation['eligible']) {
                 Log::info('User not eligible for cashback', [
                     'user_id' => $user->id,
                     'purchase_id' => $purchase->id,
-                    'reason' => $cashbackCalculation['reason'] ?? 'Unknown reason'
+                    'reason' => $cashbackCalculation['reason'] ?? 'Unknown reason',
                 ]);
+
                 return null;
             }
 
             DB::beginTransaction();
 
             $idempotencyKey = $this->generateIdempotencyKey($user->id, $purchase->id);
-            
+
             $existingCashback = Cashback::where('idempotency_key', $idempotencyKey)->first();
             if ($existingCashback) {
                 Log::info('Cashback already exists for this purchase', [
                     'cashback_id' => $existingCashback->id,
-                    'idempotency_key' => $idempotencyKey
+                    'idempotency_key' => $idempotencyKey,
                 ]);
                 DB::rollback();
+
                 return $existingCashback;
             }
 
@@ -63,7 +67,7 @@ class CashbackService
                 'idempotency_key' => $idempotencyKey,
                 'payment_provider' => $this->paymentService->getProviderName(),
                 'status' => 'initiated',
-                'retry_count' => 0
+                'retry_count' => 0,
             ]);
 
             DB::commit();
@@ -79,7 +83,7 @@ class CashbackService
             Log::error('Failed to process cashback for purchase', [
                 'user_id' => $user->id,
                 'purchase_id' => $purchase->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -90,7 +94,7 @@ class CashbackService
         try {
             $cashback->update([
                 'status' => 'processing',
-                'last_retry_at' => now()
+                'last_retry_at' => now(),
             ]);
 
             $transferData = [
@@ -104,8 +108,8 @@ class CashbackService
                 'metadata' => [
                     'cashback_id' => $cashback->id,
                     'purchase_id' => $cashback->purchase_id,
-                    'type' => 'cashback_payment'
-                ]
+                    'type' => 'cashback_payment',
+                ],
             ];
 
             $paymentResponse = $this->paymentService->initializeTransfer($transferData);
@@ -115,7 +119,7 @@ class CashbackService
                     'status' => 'completed',
                     'transaction_reference' => $paymentResponse['transaction_reference'],
                     'paid_at' => now(),
-                    'failure_reason' => null
+                    'failure_reason' => null,
                 ]);
 
                 event(new CashbackCompleted($cashback->user, $cashback, $paymentResponse));
@@ -123,17 +127,19 @@ class CashbackService
                 Log::info('Cashback payment completed successfully', [
                     'cashback_id' => $cashback->id,
                     'transaction_reference' => $paymentResponse['transaction_reference'],
-                    'amount' => $cashback->amount
+                    'amount' => $cashback->amount,
                 ]);
 
                 return true;
             } else {
                 $this->handlePaymentFailure($cashback, $paymentResponse);
+
                 return false;
             }
 
         } catch (\Exception $e) {
             $this->handlePaymentException($cashback, $e);
+
             return false;
         }
     }
@@ -145,12 +151,12 @@ class CashbackService
         if ($cashback->retry_count >= $maxAttempts) {
             $cashback->update([
                 'status' => 'failed',
-                'failure_reason' => 'Maximum retry attempts exceeded'
+                'failure_reason' => 'Maximum retry attempts exceeded',
             ]);
 
             event(new CashbackFailed(
-                $cashback->user, 
-                $cashback, 
+                $cashback->user,
+                $cashback,
                 'Maximum retry attempts exceeded',
                 false
             ));
@@ -158,18 +164,18 @@ class CashbackService
             Log::warning('Cashback payment permanently failed - max retries exceeded', [
                 'cashback_id' => $cashback->id,
                 'retry_count' => $cashback->retry_count,
-                'max_attempts' => $maxAttempts
+                'max_attempts' => $maxAttempts,
             ]);
 
             return false;
         }
 
         $cashback->increment('retry_count');
-        
+
         Log::info('Retrying cashback payment', [
             'cashback_id' => $cashback->id,
             'retry_count' => $cashback->retry_count,
-            'max_attempts' => $maxAttempts
+            'max_attempts' => $maxAttempts,
         ]);
 
         return $this->processCashbackPayment($cashback);
@@ -184,11 +190,13 @@ class CashbackService
             ->where('retry_count', '<', $maxAttempts)
             ->where(function ($query) use ($delayMinutes) {
                 foreach ($delayMinutes as $attempt => $delay) {
-                    if ($attempt === 0) continue;
-                    
+                    if ($attempt === 0) {
+                        continue;
+                    }
+
                     $query->orWhere(function ($q) use ($attempt, $delay) {
                         $q->where('retry_count', $attempt - 1)
-                          ->where('last_retry_at', '<=', now()->subMinutes($delay));
+                            ->where('last_retry_at', '<=', now()->subMinutes($delay));
                     });
                 }
             })
@@ -201,7 +209,7 @@ class CashbackService
             ->with(['user', 'purchase'])
             ->first();
 
-        if (!$cashback) {
+        if (! $cashback) {
             return null;
         }
 
@@ -218,13 +226,13 @@ class CashbackService
             'purchase' => [
                 'id' => $cashback->purchase->id,
                 'amount' => $cashback->purchase->amount,
-                'created_at' => $cashback->purchase->created_at
+                'created_at' => $cashback->purchase->created_at,
             ],
             'user' => [
                 'id' => $cashback->user->id,
                 'name' => $cashback->user->name,
-                'email' => $cashback->user->email
-            ]
+                'email' => $cashback->user->email,
+            ],
         ];
     }
 
@@ -236,12 +244,12 @@ class CashbackService
         $cashback->update([
             'status' => 'failed',
             'transaction_reference' => $paymentResponse['transaction_reference'] ?? null,
-            'failure_reason' => $paymentResponse['message'] ?? 'Payment failed'
+            'failure_reason' => $paymentResponse['message'] ?? 'Payment failed',
         ]);
 
         event(new CashbackFailed(
-            $cashback->user, 
-            $cashback, 
+            $cashback->user,
+            $cashback,
             $paymentResponse['message'] ?? 'Payment failed',
             $isRetryable && $cashback->retry_count < ($this->retryConfig['max_attempts'] ?? 3)
         ));
@@ -251,7 +259,7 @@ class CashbackService
             'error_code' => $errorCode,
             'message' => $paymentResponse['message'] ?? 'Unknown error',
             'is_retryable' => $isRetryable,
-            'retry_count' => $cashback->retry_count
+            'retry_count' => $cashback->retry_count,
         ]);
 
         if ($isRetryable) {
@@ -263,12 +271,12 @@ class CashbackService
     {
         $cashback->update([
             'status' => 'failed',
-            'failure_reason' => $exception->getMessage()
+            'failure_reason' => $exception->getMessage(),
         ]);
 
         event(new CashbackFailed(
-            $cashback->user, 
-            $cashback, 
+            $cashback->user,
+            $cashback,
             'System error occurred during payment processing',
             true
         ));
@@ -276,7 +284,7 @@ class CashbackService
         Log::error('Cashback payment exception', [
             'cashback_id' => $cashback->id,
             'exception' => $exception->getMessage(),
-            'trace' => $exception->getTraceAsString()
+            'trace' => $exception->getTraceAsString(),
         ]);
 
         $this->scheduleRetry($cashback);
@@ -290,12 +298,12 @@ class CashbackService
         Log::info('Scheduling cashback retry', [
             'cashback_id' => $cashback->id,
             'retry_count' => $cashback->retry_count,
-            'delay_minutes' => $retryDelay
+            'delay_minutes' => $retryDelay,
         ]);
     }
 
     private function generateIdempotencyKey(int $userId, int $purchaseId): string
     {
-        return 'cashback_' . $userId . '_' . $purchaseId . '_' . Str::random(8);
+        return 'cashback_'.$userId.'_'.$purchaseId.'_'.Str::random(8);
     }
 }

@@ -16,7 +16,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'sometimes|in:user,admin'
+            'role' => 'sometimes|in:user,admin',
         ]);
 
         /** @var \App\Models\User $user */
@@ -34,7 +34,7 @@ class AuthController extends Controller
             'token' => $token,
             'user' => $user,
             'role' => $user->role,
-            'redirect' => $user->role === 'admin' ? '/admin' : '/dashboard'
+            'redirect' => $user->role === 'admin' ? '/admin' : '/dashboard',
         ], 201);
     }
 
@@ -60,7 +60,7 @@ class AuthController extends Controller
                     'role' => $user->role,
                 ],
                 'role' => $user->role,
-                'redirect' => $user->role === 'admin' ? '/admin' : '/dashboard'
+                'redirect' => $user->role === 'admin' ? '/admin' : '/dashboard',
             ]);
         }
 
@@ -75,13 +75,13 @@ class AuthController extends Controller
         if ($request->user()->currentAccessToken()) {
             $request->user()->currentAccessToken()->delete();
         }
-        
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return response()->json([
-            'message' => 'Logged out successfully'
+            'message' => 'Logged out successfully',
         ]);
     }
 
@@ -89,7 +89,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'user' => $request->user(),
-            'role' => $request->user()->role
+            'role' => $request->user()->role,
         ]);
     }
 }

@@ -23,13 +23,13 @@ class MockPaymentService
     {
         $this->simulateProcessingDelay();
 
-        $transactionReference = 'TXN_' . Str::upper(Str::random(12));
-        
+        $transactionReference = 'TXN_'.Str::upper(Str::random(12));
+
         Log::info('Mock payment transfer initiated', [
             'reference' => $transactionReference,
             'amount' => $transferData['amount'],
             'recipient' => $transferData['recipient'] ?? 'user',
-            'currency' => $transferData['currency'] ?? 'NGN'
+            'currency' => $transferData['currency'] ?? 'NGN',
         ]);
 
         $outcome = $this->determineTransactionOutcome();
@@ -42,12 +42,12 @@ class MockPaymentService
                     'status' => 'completed',
                     'message' => 'Transfer completed successfully',
                     'provider_response' => [
-                        'transfer_code' => 'TRA_' . Str::random(10),
+                        'transfer_code' => 'TRA_'.Str::random(10),
                         'status' => 'success',
                         'amount' => $transferData['amount'],
                         'currency' => $transferData['currency'] ?? 'NGN',
-                        'transferred_at' => now()->toISOString()
-                    ]
+                        'transferred_at' => now()->toISOString(),
+                    ],
                 ];
 
             case 'network_timeout':
@@ -60,8 +60,8 @@ class MockPaymentService
                     'retryable' => true,
                     'provider_response' => [
                         'error' => 'Request timed out',
-                        'error_code' => 'TIMEOUT_ERROR'
-                    ]
+                        'error_code' => 'TIMEOUT_ERROR',
+                    ],
                 ];
 
             case 'insufficient_funds':
@@ -74,8 +74,8 @@ class MockPaymentService
                     'retryable' => false,
                     'provider_response' => [
                         'error' => 'Insufficient account balance',
-                        'error_code' => 'INSUFFICIENT_BALANCE'
-                    ]
+                        'error_code' => 'INSUFFICIENT_BALANCE',
+                    ],
                 ];
 
             case 'service_unavailable':
@@ -88,8 +88,8 @@ class MockPaymentService
                     'retryable' => true,
                     'provider_response' => [
                         'error' => 'Service temporarily unavailable',
-                        'error_code' => 'SERVICE_DOWN'
-                    ]
+                        'error_code' => 'SERVICE_DOWN',
+                    ],
                 ];
 
             default:
@@ -102,8 +102,8 @@ class MockPaymentService
                     'retryable' => true,
                     'provider_response' => [
                         'error' => 'Unknown error occurred',
-                        'error_code' => 'UNKNOWN'
-                    ]
+                        'error_code' => 'UNKNOWN',
+                    ],
                 ];
         }
     }
@@ -113,12 +113,12 @@ class MockPaymentService
         $this->simulateProcessingDelay();
 
         Log::info('Mock payment verification requested', [
-            'reference' => $transactionReference
+            'reference' => $transactionReference,
         ]);
 
         if (Str::startsWith($transactionReference, 'TXN_')) {
             $rand = mt_rand(1, 100);
-            
+
             if ($rand <= 85) {
                 return [
                     'success' => true,
@@ -127,8 +127,8 @@ class MockPaymentService
                     'verified_at' => now()->toISOString(),
                     'provider_response' => [
                         'status' => 'success',
-                        'verified' => true
-                    ]
+                        'verified' => true,
+                    ],
                 ];
             } elseif ($rand <= 95) {
                 return [
@@ -138,8 +138,8 @@ class MockPaymentService
                     'message' => 'Transaction still processing',
                     'provider_response' => [
                         'status' => 'pending',
-                        'verified' => false
-                    ]
+                        'verified' => false,
+                    ],
                 ];
             } else {
                 return [
@@ -149,8 +149,8 @@ class MockPaymentService
                     'message' => 'Transaction verification failed',
                     'provider_response' => [
                         'status' => 'failed',
-                        'verified' => false
-                    ]
+                        'verified' => false,
+                    ],
                 ];
             }
         }
@@ -162,8 +162,8 @@ class MockPaymentService
             'message' => 'Transaction not found',
             'provider_response' => [
                 'error' => 'Transaction reference not found',
-                'error_code' => 'NOT_FOUND'
-            ]
+                'error_code' => 'NOT_FOUND',
+            ],
         ];
     }
 
@@ -177,30 +177,30 @@ class MockPaymentService
         return in_array($errorCode, [
             'NETWORK_TIMEOUT',
             'SERVICE_UNAVAILABLE',
-            'UNKNOWN_ERROR'
+            'UNKNOWN_ERROR',
         ]);
     }
 
     private function determineTransactionOutcome(): string
     {
         $rand = mt_rand(1, 100) / 100;
-        
+
         if ($rand <= $this->config['success_rate']) {
             return 'success';
         }
-        
+
         $rand -= $this->config['success_rate'];
-        
+
         if ($rand <= $this->config['network_timeout_rate']) {
             return 'network_timeout';
         }
-        
+
         $rand -= $this->config['network_timeout_rate'];
-        
+
         if ($rand <= $this->config['insufficient_funds_rate']) {
             return 'insufficient_funds';
         }
-        
+
         return 'service_unavailable';
     }
 
@@ -208,7 +208,7 @@ class MockPaymentService
     {
         $delayRange = $this->config['processing_delay_ms'];
         $delayMs = mt_rand($delayRange[0], $delayRange[1]);
-        
+
         usleep($delayMs * 1000);
     }
 
@@ -222,8 +222,8 @@ class MockPaymentService
                 'amount' => 1000,
                 'currency' => 'NGN',
                 'transferred_at' => now()->toISOString(),
-                'reason' => $status === 'success' ? 'Transfer completed' : 'Transfer failed'
-            ]
+                'reason' => $status === 'success' ? 'Transfer completed' : 'Transfer failed',
+            ],
         ];
     }
 }

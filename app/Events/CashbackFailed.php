@@ -24,8 +24,8 @@ class CashbackFailed implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('user.' . $this->user->id),
-            new Channel('cashbacks')
+            new Channel('user.'.$this->user->id),
+            new Channel('cashbacks'),
         ];
     }
 
@@ -40,19 +40,19 @@ class CashbackFailed implements ShouldBroadcast
                 'status' => $this->cashback->status,
                 'retry_count' => $this->cashback->retry_count,
                 'failure_reason' => $this->cashback->failure_reason,
-                'created_at' => $this->cashback->created_at
+                'created_at' => $this->cashback->created_at,
             ],
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
-                'email' => $this->user->email
+                'email' => $this->user->email,
             ],
             'reason' => $this->reason,
             'will_retry' => $this->willRetry,
-            'message' => $this->willRetry 
+            'message' => $this->willRetry
                 ? "Your cashback payment is being retried. We'll notify you once it's processed."
-                : "We encountered an issue processing your cashback. Our team has been notified.",
-            'timestamp' => now()->toISOString()
+                : 'We encountered an issue processing your cashback. Our team has been notified.',
+            'timestamp' => now()->toISOString(),
         ];
     }
 

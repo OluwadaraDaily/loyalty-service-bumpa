@@ -37,5 +37,4 @@ class AdminAchievementController extends Controller
             'total_badges_earned' => $totalBadgesEarned,
         ]);
     }
-
 }

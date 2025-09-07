@@ -23,8 +23,8 @@ class CashbackCompleted implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('user.' . $this->user->id),
-            new Channel('cashbacks')
+            new Channel('user.'.$this->user->id),
+            new Channel('cashbacks'),
         ];
     }
 
@@ -39,16 +39,16 @@ class CashbackCompleted implements ShouldBroadcast
                 'status' => $this->cashback->status,
                 'transaction_reference' => $this->cashback->transaction_reference,
                 'paid_at' => $this->cashback->paid_at,
-                'created_at' => $this->cashback->created_at
+                'created_at' => $this->cashback->created_at,
             ],
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
-                'email' => $this->user->email
+                'email' => $this->user->email,
             ],
             'message' => "Congratulations! You've received a cashback of {$this->cashback->currency} {$this->cashback->amount}",
             'payment_response' => $this->paymentResponse,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
     }
 

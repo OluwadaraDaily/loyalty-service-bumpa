@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('unlocked')->default(false);
             $table->timestamp('unlocked_at')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'achievement_id'], 'unique_user_achievement');
         });
     }
