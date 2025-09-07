@@ -30,15 +30,21 @@ export default function Dashboard() {
     const { auth } = usePage().props as any;
     const [achievementNotification, setAchievementNotification] = useState<AchievementNotificationType | null>(null);
 
-    const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDashboardData(auth?.user?.id);
-    const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useDashboardStats(auth?.user?.id);
+    const { data: dashboardData, loading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useDashboardData(auth?.user?.id);
+    const { data: dashboardStats, loading: statsLoading, error: statsError, refetch: refetchStats } = useDashboardStats(auth?.user?.id);
 
-    const simulateAchievementMutation = useSimulateAchievement(auth.user.id);
-    const purchaseProductMutation = usePurchaseProduct(auth.user.id);
+    const simulateAchievementMutation = useSimulateAchievement(auth.user.id, () => {
+        refetchDashboard();
+        refetchStats();
+    });
+    const purchaseProductMutation = usePurchaseProduct(auth.user.id, () => {
+        refetchDashboard();
+        refetchStats();
+    });
 
     const handleSimulateAchievement = async () => {
         try {
-            const result = await simulateAchievementMutation.mutateAsync();
+            const result = await simulateAchievementMutation.mutate();
             if (result.success) {
                 setAchievementNotification({
                     achievement: result.achievement,
@@ -57,7 +63,7 @@ export default function Dashboard() {
     const handleRandomPurchase = async () => {
         try {
             const randomProduct = getRandomProduct();
-            const result = await purchaseProductMutation.mutateAsync(randomProduct);
+            const result = await purchaseProductMutation.mutate(randomProduct);
             if (result.success) {
                 toast.success(`Successfully purchased ${randomProduct.name}!`, {
                     description: `Amount: ₦${randomProduct.amount.toLocaleString()}`,
@@ -140,19 +146,19 @@ export default function Dashboard() {
                     <div className="flex gap-2">
                         <Button
                             onClick={handleRandomPurchase}
-                            disabled={purchaseProductMutation.isPending}
+                            disabled={purchaseProductMutation.loading}
                             className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                         >
                             <ShoppingCart className="mr-2 h-4 w-4" />
-                            {purchaseProductMutation.isPending ? 'Processing...' : 'Random Purchase'}
+                            {purchaseProductMutation.loading ? 'Processing...' : 'Random Purchase'}
                         </Button>
                         <Button
                             onClick={handleSimulateAchievement}
-                            disabled={simulateAchievementMutation.isPending}
+                            disabled={simulateAchievementMutation.loading}
                             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                         >
                             <Gift className="mr-2 h-4 w-4" />
-                            {simulateAchievementMutation.isPending ? 'Simulating...' : 'Simulate Achievement'}
+                            {simulateAchievementMutation.loading ? 'Simulating...' : 'Simulate Achievement'}
                         </Button>
                     </div>
                 </div>

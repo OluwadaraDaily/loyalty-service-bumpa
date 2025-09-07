@@ -1,5 +1,6 @@
+import { useCallback, useEffect, useState } from 'react';
 import type { Product } from '@/constants/products';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/axios';
 
 export interface Achievement {
     id: number;
@@ -61,116 +62,92 @@ export interface DashboardData {
     badges: Badge[];
 }
 
-const getAuthHeaders = () => {
-    // Get CSRF token from XSRF-TOKEN cookie (set by Sanctum)
-    const getCookie = (name: string) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) {
-            return decodeURIComponent(parts.pop()?.split(';').shift() || '');
-        }
-        return null;
-    };
-
-    const token = getCookie('XSRF-TOKEN');
-    return {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(token && { 'X-CSRF-TOKEN': token }),
-    };
-};
 
 export const useDashboardData = (userId: number) => {
-    return useQuery<DashboardData>({
-        queryKey: ['dashboard-data', userId],
-        queryFn: async () => {
-            // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', {
-                credentials: 'include',
-            });
+    const [data, setData] = useState<DashboardData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-            const response = await fetch(`/api/users/${userId}/achievements`, {
-                headers: getAuthHeaders(),
-                credentials: 'include',
-            });
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await api.get(`/users/${userId}/achievements`);
             console.log('RESPONSE [Dashboard Data] =>', response);
-            if (!response.ok) {
-                throw new Error('Failed to fetch dashboard data');
-            }
-            return response.json();
-        },
-    });
+            setData(response.data);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error('Failed to fetch dashboard data'));
+        } finally {
+            setLoading(false);
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    return { data, loading, error, refetch: fetchData };
 };
 
 export const useDashboardStats = (userId: number) => {
-    return useQuery<DashboardStats>({
-        queryKey: ['dashboard-stats', userId],
-        queryFn: async () => {
-            // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', {
-                credentials: 'include',
-            });
+    const [data, setData] = useState<DashboardStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-            const response = await fetch(`/api/users/${userId}/dashboard-stats`, {
-                headers: getAuthHeaders(),
-                credentials: 'include',
-            });
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await api.get(`/users/${userId}/dashboard-stats`);
             console.log('RESPONSE [Dashboard Stats] =>', response);
-            if (!response.ok) {
-                throw new Error('Failed to fetch dashboard stats');
-            }
-            return response.json();
-        },
-    });
+            setData(response.data);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error('Failed to fetch dashboard stats'));
+        } finally {
+            setLoading(false);
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    return { data, loading, error, refetch: fetchData };
 };
 
-export const useSimulateAchievement = (userId: number) => {
-    const queryClient = useQueryClient();
+export const useSimulateAchievement = (userId: number, onSuccess?: () => void) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
 
-    return useMutation({
-        mutationFn: async () => {
-            // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', {
-                credentials: 'include',
-            });
-
-            const headers = getAuthHeaders();
-            console.log('Request headers:', headers);
-
-            const response = await fetch(`/api/users/${userId}/simulate-achievement`, {
-                method: 'POST',
-                headers,
-                credentials: 'include',
-            });
-
+    const mutate = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await api.post(`/users/${userId}/simulate-achievement`);
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
+            onSuccess?.();
+            return response.data;
+        } catch (err) {
+            const error = err instanceof Error ? err : new Error('Failed to simulate achievement');
+            setError(error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }, [userId, onSuccess]);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Error response:', errorText);
-                throw new Error('Failed to simulate achievement');
-            }
-            return response.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['dashboard-data', userId] });
-            queryClient.invalidateQueries({ queryKey: ['dashboard-stats', userId] });
-        },
-    });
+    return { mutate, loading, error };
 };
 
-export const usePurchaseProduct = (userId: number) => {
-    const queryClient = useQueryClient();
+export const usePurchaseProduct = (userId: number, onSuccess?: () => void) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
 
-    return useMutation({
-        mutationFn: async (product: Product) => {
-            // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', {
-                credentials: 'include',
-            });
-
+    const mutate = useCallback(async (product: Product) => {
+        try {
+            setLoading(true);
+            setError(null);
             const purchaseData = {
                 user_id: userId,
                 amount: product.amount,
@@ -188,23 +165,18 @@ export const usePurchaseProduct = (userId: number) => {
                 },
             };
 
-            const response = await fetch(`/api/users/${userId}/purchase`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                credentials: 'include',
-                body: JSON.stringify(purchaseData),
-            });
+            const response = await api.post(`/users/${userId}/purchase`, purchaseData);
+            onSuccess?.();
+            return response.data;
+        } catch (err) {
+            const error = err instanceof Error ? err : new Error('Failed to process purchase');
+            console.error('Purchase error:', error);
+            setError(error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }, [userId, onSuccess]);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Purchase error:', errorText);
-                throw new Error('Failed to process purchase');
-            }
-            return response.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['dashboard-data', userId] });
-            queryClient.invalidateQueries({ queryKey: ['dashboard-stats', userId] });
-        },
-    });
+    return { mutate, loading, error };
 };

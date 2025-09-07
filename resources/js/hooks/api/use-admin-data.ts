@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
+import api from '@/lib/axios';
 
 export interface AdminUser {
     id: number;
@@ -21,22 +22,28 @@ export interface AdminDashboardData {
     total_badges_earned: number;
 }
 
-const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-    'Content-Type': 'application/json',
-});
 
 export const useAdminDashboardData = () => {
-    return useQuery<AdminDashboardData>({
-        queryKey: ['admin-dashboard-data'],
-        queryFn: async () => {
-            const response = await fetch('/api/admin/users/achievements', {
-                headers: getAuthHeaders(),
-            });
-            if (!response.ok) {
-                throw new Error('Failed to fetch admin dashboard data');
-            }
-            return response.json();
-        },
-    });
+    const [data, setData] = useState<AdminDashboardData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await api.get('/admin/users/achievements');
+            setData(response.data);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error('Failed to fetch admin dashboard data'));
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    return { data, loading, error, refetch: fetchData };
 };
