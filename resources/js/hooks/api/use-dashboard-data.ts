@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Product } from '@/constants/products';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface Achievement {
     id: number;
@@ -75,27 +75,26 @@ const getAuthHeaders = () => {
     const token = getCookie('XSRF-TOKEN');
     return {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
-        ...(token && { 'X-CSRF-TOKEN': token })
+        ...(token && { 'X-CSRF-TOKEN': token }),
     };
 };
-
 
 export const useDashboardData = (userId: number) => {
     return useQuery<DashboardData>({
         queryKey: ['dashboard-data', userId],
         queryFn: async () => {
             // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', { 
-                credentials: 'include' 
+            await fetch('/sanctum/csrf-cookie', {
+                credentials: 'include',
             });
-            
+
             const response = await fetch(`/api/users/${userId}/achievements`, {
                 headers: getAuthHeaders(),
                 credentials: 'include',
             });
-            console.log("RESPONSE [Dashboard Data] =>", response);
+            console.log('RESPONSE [Dashboard Data] =>', response);
             if (!response.ok) {
                 throw new Error('Failed to fetch dashboard data');
             }
@@ -109,15 +108,15 @@ export const useDashboardStats = (userId: number) => {
         queryKey: ['dashboard-stats', userId],
         queryFn: async () => {
             // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', { 
-                credentials: 'include' 
+            await fetch('/sanctum/csrf-cookie', {
+                credentials: 'include',
             });
-            
+
             const response = await fetch(`/api/users/${userId}/dashboard-stats`, {
                 headers: getAuthHeaders(),
                 credentials: 'include',
             });
-            console.log("RESPONSE [Dashboard Stats] =>", response);
+            console.log('RESPONSE [Dashboard Stats] =>', response);
             if (!response.ok) {
                 throw new Error('Failed to fetch dashboard stats');
             }
@@ -128,26 +127,26 @@ export const useDashboardStats = (userId: number) => {
 
 export const useSimulateAchievement = (userId: number) => {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async () => {
             // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', { 
-                credentials: 'include' 
+            await fetch('/sanctum/csrf-cookie', {
+                credentials: 'include',
             });
-            
+
             const headers = getAuthHeaders();
             console.log('Request headers:', headers);
-            
+
             const response = await fetch(`/api/users/${userId}/simulate-achievement`, {
                 method: 'POST',
                 headers,
                 credentials: 'include',
             });
-            
+
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Error response:', errorText);
@@ -164,14 +163,14 @@ export const useSimulateAchievement = (userId: number) => {
 
 export const usePurchaseProduct = (userId: number) => {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async (product: Product) => {
             // First ensure CSRF cookie
-            await fetch('/sanctum/csrf-cookie', { 
-                credentials: 'include' 
+            await fetch('/sanctum/csrf-cookie', {
+                credentials: 'include',
             });
-            
+
             const purchaseData = {
                 user_id: userId,
                 amount: product.amount,
@@ -185,17 +184,17 @@ export const usePurchaseProduct = (userId: number) => {
                     product_name: product.name,
                     product_category: product.category,
                     product_description: product.description,
-                    source: 'frontend_purchase'
-                }
+                    source: 'frontend_purchase',
+                },
             };
-            
+
             const response = await fetch(`/api/users/${userId}/purchase`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 credentials: 'include',
                 body: JSON.stringify(purchaseData),
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Purchase error:', errorText);

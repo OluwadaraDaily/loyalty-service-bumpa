@@ -1,7 +1,7 @@
 import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
 import { login } from '@/routes';
 import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle, Gift, DollarSign, Users, Zap } from 'lucide-react';
+import { DollarSign, Gift, LoaderCircle, Users, Zap } from 'lucide-react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -14,7 +14,7 @@ export default function Register() {
     return (
         <AuthLayout title="Join the Loyalty Program" description="Create your account and start earning rewards, cashback, and exclusive badges">
             <Head title="Register" />
-            
+
             {/* Benefits Preview */}
             <div className="mb-6 space-y-3">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">

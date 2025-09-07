@@ -23,16 +23,16 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
             {/* Loyalty Program Benefits */}
             <div className="mb-6 grid grid-cols-3 gap-4 text-center">
-                <div className="flex flex-col items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950">
-                    <Trophy className="h-6 w-6 text-blue-600 mb-1" />
+                <div className="flex flex-col items-center rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+                    <Trophy className="mb-1 h-6 w-6 text-blue-600" />
                     <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Achievements</span>
                 </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-green-50 dark:bg-green-950">
-                    <Star className="h-6 w-6 text-green-600 mb-1" />
+                <div className="flex flex-col items-center rounded-lg bg-green-50 p-3 dark:bg-green-950">
+                    <Star className="mb-1 h-6 w-6 text-green-600" />
                     <span className="text-xs font-medium text-green-700 dark:text-green-300">Rewards</span>
                 </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-purple-50 dark:bg-purple-950">
-                    <Shield className="h-6 w-6 text-purple-600 mb-1" />
+                <div className="flex flex-col items-center rounded-lg bg-purple-50 p-3 dark:bg-purple-950">
+                    <Shield className="mb-1 h-6 w-6 text-purple-600" />
                     <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Badges</span>
                 </div>
             </div>
