@@ -46,24 +46,32 @@ class LoyaltySystemSeeder extends Seeder
             'name' => 'Shopping Newbie',
             'description' => 'Welcome to our store! You\'ve made your first purchase.',
             'icon_url' => '/icons/newbie-badge.svg',
+            'type' => 'purchase_count',
+            'points_required' => 1,
         ]);
 
         $regular = Badge::create([
             'name' => 'Regular Shopper',
             'description' => 'You\'re becoming a regular! Keep it up.',
             'icon_url' => '/icons/regular-badge.svg',
+            'type' => 'purchase_count',
+            'points_required' => 5,
         ]);
 
         $vip = Badge::create([
             'name' => 'VIP Customer',
             'description' => 'You\'re a VIP! Thanks for your loyalty and spending.',
             'icon_url' => '/icons/vip-badge.svg',
+            'type' => 'total_spent',
+            'points_required' => 100,
         ]);
 
         $champion = Badge::create([
             'name' => 'Shopping Champion',
             'description' => 'You\'ve achieved shopping mastery! Ultimate loyalty status.',
             'icon_url' => '/icons/champion-badge.svg',
+            'type' => 'purchase_count',
+            'points_required' => 10,
         ]);
 
         // Create Badge-Achievement relationships

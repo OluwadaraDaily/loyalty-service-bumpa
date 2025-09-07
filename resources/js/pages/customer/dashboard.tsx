@@ -23,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface AchievementNotificationType {
-    achievement: { id: number; title: string; description: string };
+    achievement: { id: number; name: string; description: string };
     badges: Array<{ id: number; name: string; description: string; icon_url: string | null }>;
 }
 
@@ -72,7 +72,7 @@ export default function Dashboard() {
                     setAchievementNotification({
                         achievement: {
                             id: achievement.id,
-                            title: achievement.title,
+                            name: achievement.name,
                             description: achievement.description
                         },
                         badges: badges.map((badge: any) => ({

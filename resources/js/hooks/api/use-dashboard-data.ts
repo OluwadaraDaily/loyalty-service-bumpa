@@ -3,11 +3,11 @@ import type { Product } from '@/constants/products';
 
 export interface Achievement {
     id: number;
-    title: string;
+    name: string;
     description: string;
-    type: string;
-    threshold: number;
+    points_required: number;
     progress: number;
+    progress_percentage: number;
     unlocked: boolean;
     unlocked_at: string | null;
     badges: Array<{
@@ -23,7 +23,12 @@ export interface Badge {
     name: string;
     description: string;
     icon_url: string | null;
-    unlocked_at: string;
+    type: string;
+    points_required: number;
+    progress: number;
+    progress_percentage: number;
+    unlocked: boolean;
+    unlocked_at: string | null;
 }
 
 export interface DashboardStats {

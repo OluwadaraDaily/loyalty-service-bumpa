@@ -15,12 +15,14 @@ class Badge extends Model
         'name',
         'description',
         'icon_url',
+        'type',
+        'points_required',
     ];
 
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_badges')
-            ->withPivot('unlocked', 'unlocked_at')
+            ->withPivot('progress', 'unlocked', 'unlocked_at')
             ->withTimestamps();
     }
 

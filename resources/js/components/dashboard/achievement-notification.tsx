@@ -3,7 +3,7 @@ import { Sparkles } from 'lucide-react';
 
 interface AchievementNotificationProps {
     notification: {
-        achievement: { id: number; title: string; description: string };
+        achievement: { id: number; name: string; description: string };
         badges: Array<{ id: number; name: string; description: string; icon_url: string | null }>;
     } | null;
 }
@@ -22,7 +22,7 @@ export function AchievementNotification({ notification }: AchievementNotificatio
                         <Sparkles className="h-8 w-8 animate-pulse" />
                         <div>
                             <h3 className="font-bold text-lg">Achievement Unlocked!</h3>
-                            <p className="text-sm opacity-90">{notification.achievement.title}</p>
+                            <p className="text-sm opacity-90">{notification.achievement.name}</p>
                             {notification.badges.length > 0 && (
                                 <p className="text-xs opacity-80 mt-1">
                                     🏆 {notification.badges.map((b) => b.name).join(', ')}

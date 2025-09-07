@@ -15,13 +15,17 @@ class UserAchievementController extends Controller
             ->with(['badges'])
             ->get()
             ->map(function ($achievement) {
+                $progress = $achievement->pivot->progress ?? 0;
+                $pointsRequired = $achievement->points_required ?? 1;
+                $progressPercentage = min(100, round(($progress / $pointsRequired) * 100, 1));
+                
                 return [
                     'id' => $achievement->id,
-                    'title' => $achievement->title,
+                    'name' => $achievement->name,
                     'description' => $achievement->description,
-                    'type' => $achievement->type,
-                    'threshold' => $achievement->threshold,
-                    'progress' => $achievement->pivot->progress,
+                    'points_required' => $pointsRequired,
+                    'progress' => $progress,
+                    'progress_percentage' => $progressPercentage,
                     'unlocked' => $achievement->pivot->unlocked,
                     'unlocked_at' => $achievement->pivot->unlocked_at,
                     'badges' => $achievement->badges->map(function ($badge) {
@@ -36,14 +40,22 @@ class UserAchievementController extends Controller
             });
 
         $badges = $user->badges()
-            ->wherePivot('unlocked', true)
             ->get()
             ->map(function ($badge) {
+                $progress = $badge->pivot->progress ?? 0;
+                $pointsRequired = $badge->points_required ?? 1;
+                $progressPercentage = min(100, round(($progress / $pointsRequired) * 100, 1));
+                
                 return [
                     'id' => $badge->id,
                     'name' => $badge->name,
                     'description' => $badge->description,
                     'icon_url' => $badge->icon_url,
+                    'type' => $badge->type,
+                    'points_required' => $pointsRequired,
+                    'progress' => $progress,
+                    'progress_percentage' => $progressPercentage,
+                    'unlocked' => $badge->pivot->unlocked,
                     'unlocked_at' => $badge->pivot->unlocked_at,
                 ];
             });
@@ -106,7 +118,7 @@ class UserAchievementController extends Controller
         }
 
         $user->achievements()->updateExistingPivot($achievement->id, [
-            'progress' => $achievement->threshold,
+            'progress' => $achievement->points_required,
             'unlocked' => true,
             'unlocked_at' => now(),
         ]);
@@ -119,6 +131,7 @@ class UserAchievementController extends Controller
             if (!$userBadge || !$userBadge->pivot->unlocked) {
                 $user->badges()->syncWithoutDetaching([
                     $badge->id => [
+                        'progress' => $badge->points_required,
                         'unlocked' => true,
                         'unlocked_at' => now(),
                     ]
@@ -132,14 +145,20 @@ class UserAchievementController extends Controller
             }
         }
 
+        // Force refresh of user relationships to get updated data
+        $user->refresh();
+        $user->load(['achievements.badges', 'badges']);
+
         return response()->json([
             'success' => true,
+            'message' => 'Achievement unlocked successfully!',
             'achievement' => [
                 'id' => $achievement->id,
-                'title' => $achievement->title,
+                'name' => $achievement->name,
                 'description' => $achievement->description,
             ],
             'badges' => $unlockedBadges,
+            'should_refresh' => true, // Signal frontend to refresh data
         ]);
     }
 
@@ -175,18 +194,25 @@ class UserAchievementController extends Controller
                 'badges_unlocked' => count($result['newly_unlocked_badges'] ?? [])
             ]);
 
+            // Force refresh of user relationships to get updated data
+            $user->refresh();
+            $user->load(['achievements.badges', 'badges']);
+            
             $response = [
                 'success' => true,
                 'message' => 'Purchase processed successfully',
-                'purchase_reference' => $validated['payment_reference']
+                'purchase_reference' => $validated['payment_reference'],
+                'should_refresh' => true // Always refresh after purchase
             ];
 
             // Add achievement/badge unlock information if any
             if (!empty($result['newly_unlocked_achievements'])) {
                 $response['newly_unlocked_achievements'] = $result['newly_unlocked_achievements'];
+                $response['show_unlock_animation'] = true;
             }
             if (!empty($result['newly_unlocked_badges'])) {
                 $response['newly_unlocked_badges'] = $result['newly_unlocked_badges'];
+                $response['show_unlock_animation'] = true;
             }
 
             return response()->json($response);

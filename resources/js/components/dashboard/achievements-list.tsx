@@ -8,9 +8,10 @@ interface AchievementsListProps {
 }
 
 export function AchievementsList({ achievements }: AchievementsListProps) {
-    const getProgressPercentage = (progress: number, threshold: number) => {
-        return Math.min((progress / threshold) * 100, 100);
-    };
+    // No longer needed since we get progress_percentage from API
+    // const getProgressPercentage = (progress: number, threshold: number) => {
+    //     return Math.min((progress / threshold) * 100, 100);
+    // };
 
     return (
         <motion.div
@@ -38,7 +39,7 @@ export function AchievementsList({ achievements }: AchievementsListProps) {
                                 >
                                     <div className="flex justify-between items-start">
                                         <div className="flex-1">
-                                            <h3 className="font-semibold">{achievement.title}</h3>
+                                            <h3 className="font-semibold">{achievement.name}</h3>
                                             <p className="text-sm text-muted-foreground mt-1">
                                                 {achievement.description}
                                             </p>
@@ -46,7 +47,7 @@ export function AchievementsList({ achievements }: AchievementsListProps) {
                                                 <div className="flex justify-between items-center mb-1">
                                                     <span className="text-sm">Progress</span>
                                                     <span className="text-sm font-medium">
-                                                        {achievement.progress}/{achievement.threshold}
+                                                        {achievement.progress}/{achievement.points_required} ({achievement.progress_percentage}%)
                                                     </span>
                                                 </div>
                                                 <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
@@ -55,10 +56,7 @@ export function AchievementsList({ achievements }: AchievementsListProps) {
                                                             achievement.unlocked ? 'bg-green-500' : 'bg-blue-500'
                                                         }`}
                                                         style={{
-                                                            width: `${getProgressPercentage(
-                                                                achievement.progress,
-                                                                achievement.threshold
-                                                            )}%`,
+                                                            width: `${achievement.progress_percentage}%`,
                                                         }}
                                                     ></div>
                                                 </div>
