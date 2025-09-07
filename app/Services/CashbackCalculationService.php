@@ -27,23 +27,21 @@ class CashbackCalculationService
 
     public function calculateCashbackForPurchase(User $user, Purchase $purchase, array $newlyUnlockedAchievements = [], array $newlyUnlockedBadges = []): array
     {
-        // Only use the newly unlocked items passed from the current request cycle
-        $unlockedAchievements = $newlyUnlockedAchievements;
-        $unlockedBadges = $newlyUnlockedBadges;
-
-        if (empty($unlockedAchievements) && empty($unlockedBadges)) {
-            return [
-                'eligible' => false,
-                'reason' => 'No recent achievements or badges unlocked',
-                'amount' => 0,
-                'currency' => $purchase->currency
-            ];
-        }
-
-        $baseCashbackAmount = $this->calculateBaseCashback($purchase, $unlockedAchievements);
-        $multiplier = $this->calculateBadgeMultiplier($unlockedBadges);
+        // Calculate base cashback (always eligible)
+        $baseCashbackRate = config('payment.cashback.base_rate', 0.01); // 1% default base rate
+        $baseCashbackAmount = $purchase->amount * $baseCashbackRate;
         
-        $finalAmount = $baseCashbackAmount * $multiplier;
+        // Add bonus cashback for newly unlocked achievements
+        $bonusCashbackAmount = 0;
+        if (!empty($newlyUnlockedAchievements)) {
+            $bonusCashbackAmount += $this->calculateBonusCashback($purchase, $newlyUnlockedAchievements);
+        }
+        
+        $totalCashbackAmount = $baseCashbackAmount + $bonusCashbackAmount;
+        
+        // Apply badge multiplier if user has unlocked badges
+        $multiplier = $this->calculateBadgeMultiplierForUser($user, $newlyUnlockedBadges);
+        $finalAmount = $totalCashbackAmount * $multiplier;
         $finalAmount = $this->applyCashbackLimits($finalAmount);
 
         Log::info('Cashback calculation completed', [
@@ -51,10 +49,11 @@ class CashbackCalculationService
             'purchase_id' => $purchase->id,
             'purchase_amount' => $purchase->amount,
             'base_cashback' => $baseCashbackAmount,
+            'bonus_cashback' => $bonusCashbackAmount,
             'multiplier' => $multiplier,
             'final_amount' => $finalAmount,
-            'unlocked_achievements' => collect($unlockedAchievements)->pluck('name')->toArray(),
-            'unlocked_badges' => collect($unlockedBadges)->pluck('name')->toArray()
+            'newly_unlocked_achievements' => collect($newlyUnlockedAchievements)->pluck('name')->toArray(),
+            'newly_unlocked_badges' => collect($newlyUnlockedBadges)->pluck('name')->toArray()
         ]);
 
         $eligible = $finalAmount >= $this->minCashbackAmount;
@@ -64,10 +63,11 @@ class CashbackCalculationService
             'amount' => $finalAmount,
             'currency' => $purchase->currency,
             'base_amount' => $baseCashbackAmount,
+            'bonus_amount' => $bonusCashbackAmount,
             'multiplier' => $multiplier,
             'triggered_by' => [
-                'achievements' => collect($unlockedAchievements)->pluck('name')->toArray(),
-                'badges' => collect($unlockedBadges)->pluck('name')->toArray()
+                'achievements' => collect($newlyUnlockedAchievements)->pluck('name')->toArray(),
+                'badges' => collect($newlyUnlockedBadges)->pluck('name')->toArray()
             ]
         ];
     }
@@ -139,6 +139,54 @@ class CashbackCalculationService
             ->pluck('badge')
             ->filter()
             ->toArray();
+    }
+
+    private function calculateBonusCashback(Purchase $purchase, array $unlockedAchievements): float
+    {
+        $totalRate = 0;
+
+        foreach ($unlockedAchievements as $achievement) {
+            $achievementName = is_array($achievement) ? $achievement['name'] : $achievement->name;
+            $rate = $this->achievementRates[$achievementName] ?? 0;
+            $totalRate += $rate;
+
+            Log::debug('Applied achievement bonus cashback rate', [
+                'achievement' => $achievementName,
+                'rate' => $rate,
+                'total_rate' => $totalRate
+            ]);
+        }
+
+        return $purchase->amount * $totalRate;
+    }
+
+    private function calculateBadgeMultiplierForUser(User $user, array $newlyUnlockedBadges = []): float
+    {
+        $maxMultiplier = 1.0;
+
+        // Check newly unlocked badges first (higher priority)
+        foreach ($newlyUnlockedBadges as $badge) {
+            $badgeName = is_array($badge) ? $badge['name'] : $badge->name;
+            $multiplier = $this->badgeMultipliers[$badgeName] ?? 1.0;
+            $maxMultiplier = max($maxMultiplier, $multiplier);
+
+            Log::debug('Applied newly unlocked badge multiplier', [
+                'badge' => $badgeName,
+                'multiplier' => $multiplier,
+                'max_multiplier' => $maxMultiplier
+            ]);
+        }
+
+        // If no newly unlocked badges, check user's existing highest badge
+        if (empty($newlyUnlockedBadges)) {
+            $userBadges = $user->badges()->where('user_badges.unlocked', true)->get();
+            foreach ($userBadges as $badge) {
+                $multiplier = $this->badgeMultipliers[$badge->name] ?? 1.0;
+                $maxMultiplier = max($maxMultiplier, $multiplier);
+            }
+        }
+
+        return $maxMultiplier;
     }
 
     private function calculateBaseCashback(Purchase $purchase, array $unlockedAchievements): float

@@ -44,7 +44,14 @@ class UserAchievementController extends Controller
             ->map(function ($badge) {
                 $progress = $badge->pivot->progress ?? 0;
                 $pointsRequired = $badge->points_required ?? 1;
-                $progressPercentage = min(100, round(($progress / $pointsRequired) * 100, 1));
+                
+                // If badge is unlocked, progress percentage should be 100%
+                if ($badge->pivot->unlocked) {
+                    $progressPercentage = 100;
+                    $progress = $pointsRequired; // Show full progress for unlocked badges
+                } else {
+                    $progressPercentage = min(100, round(($progress / $pointsRequired) * 100, 1));
+                }
                 
                 return [
                     'id' => $badge->id,
