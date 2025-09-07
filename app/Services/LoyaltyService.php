@@ -25,7 +25,7 @@ class LoyaltyService
         $this->cashbackService = $cashbackService;
     }
 
-    public function processPurchaseEvent(array $purchaseData): void
+    public function processPurchaseEvent(array $purchaseData): array
     {
         try {
             // Reset tracking arrays for this request
@@ -37,7 +37,12 @@ class LoyaltyService
             $user = User::find($purchaseData['user_id']);
             if (!$user) {
                 Log::warning('User not found for purchase event', ['user_id' => $purchaseData['user_id']]);
-                return;
+                return [
+                    'success' => false,
+                    'error' => 'User not found',
+                    'newly_unlocked_achievements' => [],
+                    'newly_unlocked_badges' => []
+                ];
             }
 
             $purchase = $this->createPurchaseRecord($purchaseData);
@@ -52,8 +57,17 @@ class LoyaltyService
             Log::info('Successfully processed purchase event', [
                 'user_id' => $user->id,
                 'purchase_id' => $purchase->id,
-                'amount' => $purchase->amount
+                'amount' => $purchase->amount,
+                'achievements_unlocked' => count($this->newlyUnlockedAchievements),
+                'badges_unlocked' => count($this->newlyUnlockedBadges)
             ]);
+
+            return [
+                'success' => true,
+                'purchase_id' => $purchase->id,
+                'newly_unlocked_achievements' => $this->newlyUnlockedAchievements,
+                'newly_unlocked_badges' => $this->newlyUnlockedBadges
+            ];
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -97,9 +111,9 @@ class LoyaltyService
 
             $newProgress = $this->calculateAchievementProgress($user, $achievement, $purchase);
             
-            if ($newProgress >= $achievement->points_required) {
+            if ($newProgress >= $achievement->threshold) {
                 $userAchievement->update([
-                    'progress' => $achievement->points_required,
+                    'progress' => $achievement->threshold,
                     'unlocked' => true,
                     'unlocked_at' => now()
                 ]);
@@ -121,7 +135,7 @@ class LoyaltyService
                     'user_id' => $user->id,
                     'achievement_id' => $achievement->id,
                     'progress' => $newProgress,
-                    'required' => $achievement->points_required
+                    'required' => $achievement->threshold
                 ]);
             }
         }
@@ -231,12 +245,12 @@ class LoyaltyService
                 'id' => $achievement->id,
                 'name' => $achievement->name,
                 'description' => $achievement->description,
-                'points_required' => $achievement->points_required,
+                'threshold' => $achievement->threshold,
                 'progress' => $userAchievement ? $userAchievement->progress : 0,
                 'unlocked' => $userAchievement ? $userAchievement->unlocked : false,
                 'unlocked_at' => $userAchievement ? $userAchievement->unlocked_at : null,
-                'progress_percentage' => $achievement->points_required > 0 
-                    ? round((($userAchievement ? $userAchievement->progress : 0) / $achievement->points_required) * 100, 2)
+                'progress_percentage' => $achievement->threshold > 0 
+                    ? round((($userAchievement ? $userAchievement->progress : 0) / $achievement->threshold) * 100, 2)
                     : 0
             ];
         })->toArray();

@@ -23,26 +23,35 @@ class InMemoryQueueService
         Log::info('Purchase event added to queue', ['data' => $purchaseData]);
     }
 
-    public function processQueue(): void
+    public function processQueue(): array
     {
         $queue = self::getQueue();
         Log::info('Processing queue', ['count' => count($queue)]);
 
+        $results = [];
         foreach ($queue as $purchaseData) {
             try {
                 Log::debug('Processing purchase event from queue', ['data' => $purchaseData]);
-                $this->loyaltyService->processPurchaseEvent($purchaseData);
+                $result = $this->loyaltyService->processPurchaseEvent($purchaseData);
+                $results[] = $result;
                 
             } catch (\Exception $e) {
                 Log::error('Error processing purchase event from queue', [
                     'error' => $e->getMessage(),
                     'data' => $purchaseData
                 ]);
+                $results[] = [
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                    'purchase_data' => $purchaseData
+                ];
             }
         }
 
         // Clear queue after processing
         self::clearQueue();
+        
+        return $results;
     }
 
     public function getQueueSize(): int

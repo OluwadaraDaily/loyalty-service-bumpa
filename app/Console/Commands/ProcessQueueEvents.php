@@ -30,9 +30,12 @@ class ProcessQueueEvents extends Command
 
         $this->info("Processing {$queueSize} events from queue...");
         
-        $this->queueService->processQueue();
+        $results = $this->queueService->processQueue();
         
-        $this->info('Queue processing completed!');
+        $successful = collect($results)->where('success', true)->count();
+        $failed = collect($results)->where('success', false)->count();
+        
+        $this->info("Queue processing completed! Successful: {$successful}, Failed: {$failed}");
         
         return 0;
     }

@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\InMemoryQueueService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class UserAchievementController extends Controller
 {
     public function index(User $user)
     {
         $achievements = $user->achievements()
-            ->with(['badges', 'pivot'])
+            ->with(['badges'])
             ->get()
             ->map(function ($achievement) {
                 return [
@@ -113,7 +115,7 @@ class UserAchievementController extends Controller
         $unlockedBadges = [];
 
         foreach ($badges as $badge) {
-            $userBadge = $user->badges()->wherePivot('badge_id', $badge->id)->first();
+            $userBadge = $user->badges()->where('badge_id', $badge->id)->first();
             if (!$userBadge || !$userBadge->pivot->unlocked) {
                 $user->badges()->syncWithoutDetaching([
                     $badge->id => [
@@ -139,5 +141,66 @@ class UserAchievementController extends Controller
             ],
             'badges' => $unlockedBadges,
         ]);
+    }
+
+    public function purchase(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+            'amount' => 'required|numeric|min:0',
+            'currency' => 'required|string|max:3',
+            'payment_method' => 'required|string',
+            'payment_reference' => 'required|string',
+            'status' => 'required|string',
+            'timestamp' => 'required|string',
+            'metadata' => 'array',
+        ]);
+
+        try {
+            // Add to queue
+            InMemoryQueueService::addPurchaseEvent($validated);
+            
+            // Immediately process the queue and get results
+            $queueService = app(InMemoryQueueService::class);
+            $results = $queueService->processQueue();
+            
+            // Get the first result (should only be one for this purchase)
+            $result = $results[0] ?? ['success' => false];
+            
+            Log::info('Purchase event processed immediately via API', [
+                'user_id' => $user->id,
+                'amount' => $validated['amount'],
+                'product_name' => $validated['metadata']['product_name'] ?? 'Unknown',
+                'achievements_unlocked' => count($result['newly_unlocked_achievements'] ?? []),
+                'badges_unlocked' => count($result['newly_unlocked_badges'] ?? [])
+            ]);
+
+            $response = [
+                'success' => true,
+                'message' => 'Purchase processed successfully',
+                'purchase_reference' => $validated['payment_reference']
+            ];
+
+            // Add achievement/badge unlock information if any
+            if (!empty($result['newly_unlocked_achievements'])) {
+                $response['newly_unlocked_achievements'] = $result['newly_unlocked_achievements'];
+            }
+            if (!empty($result['newly_unlocked_badges'])) {
+                $response['newly_unlocked_badges'] = $result['newly_unlocked_badges'];
+            }
+
+            return response()->json($response);
+        } catch (\Exception $e) {
+            Log::error('Failed to process purchase via API', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'data' => $validated
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process purchase'
+            ], 500);
+        }
     }
 }

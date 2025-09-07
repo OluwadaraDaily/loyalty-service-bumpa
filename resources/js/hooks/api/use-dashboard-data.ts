@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Product } from '@/constants/products';
 
 export interface Achievement {
     id: number;
@@ -146,6 +147,54 @@ export const useSimulateAchievement = (userId: number) => {
                 const errorText = await response.text();
                 console.error('Error response:', errorText);
                 throw new Error('Failed to simulate achievement');
+            }
+            return response.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data', userId] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-stats', userId] });
+        },
+    });
+};
+
+export const usePurchaseProduct = (userId: number) => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: async (product: Product) => {
+            // First ensure CSRF cookie
+            await fetch('/sanctum/csrf-cookie', { 
+                credentials: 'include' 
+            });
+            
+            const purchaseData = {
+                user_id: userId,
+                amount: product.amount,
+                currency: product.currency,
+                payment_method: 'credit_card',
+                payment_reference: `purchase_${product.id}_${Date.now()}`,
+                status: 'completed',
+                timestamp: new Date().toISOString(),
+                metadata: {
+                    product_id: product.id,
+                    product_name: product.name,
+                    product_category: product.category,
+                    product_description: product.description,
+                    source: 'frontend_purchase'
+                }
+            };
+            
+            const response = await fetch(`/api/users/${userId}/purchase`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                credentials: 'include',
+                body: JSON.stringify(purchaseData),
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Purchase error:', errorText);
+                throw new Error('Failed to process purchase');
             }
             return response.json();
         },

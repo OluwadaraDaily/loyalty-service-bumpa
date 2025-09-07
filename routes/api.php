@@ -20,6 +20,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('{user}/achievements', [UserAchievementController::class, 'index']);
         Route::get('{user}/dashboard-stats', [UserAchievementController::class, 'dashboardStats']);
         Route::post('{user}/simulate-achievement', [UserAchievementController::class, 'simulateAchievement']);
+        Route::post('{user}/purchase', [UserAchievementController::class, 'purchase']);
     });
     
     // Admin-specific routes
