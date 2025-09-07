@@ -1,7 +1,7 @@
 import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
 import { login } from '@/routes';
 import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Gift, DollarSign, Users, Zap } from 'lucide-react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -12,8 +12,28 @@ import AuthLayout from '@/layouts/auth-layout';
 
 export default function Register() {
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
+        <AuthLayout title="Join the Loyalty Program" description="Create your account and start earning rewards, cashback, and exclusive badges">
             <Head title="Register" />
+            
+            {/* Benefits Preview */}
+            <div className="mb-6 space-y-3">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Gift className="h-4 w-4 text-blue-600" />
+                    <span>Earn points with every purchase</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <span>Get cashback on qualifying purchases</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Zap className="h-4 w-4 text-purple-600" />
+                    <span>Unlock exclusive badges and achievements</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Users className="h-4 w-4 text-orange-600" />
+                    <span>Join thousands of satisfied members</span>
+                </div>
+            </div>
             <Form
                 {...RegisteredUserController.store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}

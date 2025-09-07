@@ -9,17 +9,19 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+// API routes using Sanctum (handles both session and token auth)
+Route::middleware(['auth:sanctum'])->group(function () {
     // General authenticated routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-
+    
     // User-specific routes
     Route::middleware('role:user')->prefix('users')->group(function () {
         Route::get('{user}/achievements', [UserAchievementController::class, 'index']);
+        Route::get('{user}/dashboard-stats', [UserAchievementController::class, 'dashboardStats']);
+        Route::post('{user}/simulate-achievement', [UserAchievementController::class, 'simulateAchievement']);
     });
-
+    
     // Admin-specific routes
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('users/achievements', [AdminAchievementController::class, 'index']);

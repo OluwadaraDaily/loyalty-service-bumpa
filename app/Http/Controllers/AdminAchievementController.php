@@ -10,7 +10,15 @@ class AdminAchievementController extends Controller
     {
         $users = User::with(['achievements' => function ($query) {
             $query->withPivot('progress', 'unlocked', 'unlocked_at');
-        }])->get();
+        }, 'badges'])->where('role', 'user')->get();
+
+        $totalAchievementsUnlocked = $users->sum(function ($user) {
+            return $user->achievements->where('pivot.unlocked', true)->count();
+        });
+
+        $totalBadgesEarned = $users->sum(function ($user) {
+            return $user->badges->where('pivot.unlocked', true)->count();
+        });
 
         return response()->json([
             'users' => $users->map(function ($user) {
@@ -21,19 +29,12 @@ class AdminAchievementController extends Controller
                     'total_achievements' => $user->achievements->count(),
                     'unlocked_achievements' => $user->achievements->where('pivot.unlocked', true)->count(),
                     'current_badge' => $user->getCurrentBadge(),
-                    'achievements' => $user->achievements->map(function ($achievement) {
-                        return [
-                            'id' => $achievement->id,
-                            'name' => $achievement->name,
-                            'description' => $achievement->description,
-                            'points_required' => $achievement->points_required,
-                            'progress' => $achievement->pivot->progress,
-                            'unlocked' => $achievement->pivot->unlocked,
-                            'unlocked_at' => $achievement->pivot->unlocked_at,
-                        ];
-                    })
+                    'created_at' => $user->created_at->toDateString(),
                 ];
-            })
+            }),
+            'total_users' => $users->count(),
+            'total_achievements_unlocked' => $totalAchievementsUnlocked,
+            'total_badges_earned' => $totalBadgesEarned,
         ]);
     }
 

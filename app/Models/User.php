@@ -88,7 +88,7 @@ class User extends Authenticatable
     {
         $currentBadge = $this->badges()
             ->wherePivot('unlocked', true)
-            ->latest('pivot.unlocked_at')
+            ->orderBy('user_badges.unlocked_at', 'desc')
             ->first();
 
         return $currentBadge ? [

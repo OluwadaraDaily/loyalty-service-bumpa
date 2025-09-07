@@ -9,7 +9,7 @@ import AuthLayout from '@/layouts/auth-layout';
 import { register } from '@/routes';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Shield, Star, Trophy } from 'lucide-react';
 
 interface LoginProps {
     status?: string;
@@ -18,8 +18,24 @@ interface LoginProps {
 
 export default function Login({ status, canResetPassword }: LoginProps) {
     return (
-        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+        <AuthLayout title="Welcome to Loyalty Hub" description="Sign in to access your rewards, achievements, and exclusive benefits">
             <Head title="Log in" />
+
+            {/* Loyalty Program Benefits */}
+            <div className="mb-6 grid grid-cols-3 gap-4 text-center">
+                <div className="flex flex-col items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950">
+                    <Trophy className="h-6 w-6 text-blue-600 mb-1" />
+                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Achievements</span>
+                </div>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-green-50 dark:bg-green-950">
+                    <Star className="h-6 w-6 text-green-600 mb-1" />
+                    <span className="text-xs font-medium text-green-700 dark:text-green-300">Rewards</span>
+                </div>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-purple-50 dark:bg-purple-950">
+                    <Shield className="h-6 w-6 text-purple-600 mb-1" />
+                    <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Badges</span>
+                </div>
+            </div>
 
             <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="flex flex-col gap-6">
                 {({ processing, errors }) => (
