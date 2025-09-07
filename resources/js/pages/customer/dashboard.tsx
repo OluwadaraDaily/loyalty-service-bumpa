@@ -27,11 +27,11 @@ interface AchievementNotificationType {
 }
 
 export default function Dashboard() {
-    const { auth } = usePage().props as { auth: { user: { id: number; name: string } } };
+    const { auth } = usePage().props as any;
     const [achievementNotification, setAchievementNotification] = useState<AchievementNotificationType | null>(null);
 
-    const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDashboardData(auth.user.id);
-    const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useDashboardStats(auth.user.id);
+    const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDashboardData(auth?.user?.id);
+    const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useDashboardStats(auth?.user?.id);
 
     const simulateAchievementMutation = useSimulateAchievement(auth.user.id);
     const purchaseProductMutation = usePurchaseProduct(auth.user.id);
