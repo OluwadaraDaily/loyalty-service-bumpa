@@ -10,7 +10,6 @@ import { useDashboardData, useDashboardStats, useSimulateAchievement, usePurchas
 import { getRandomProduct } from '@/constants/products';
 import { StatsOverview } from '@/components/dashboard/stats-overview';
 import { CurrentBadge } from '@/components/dashboard/current-badge';
-import { AchievementsOverview } from '@/components/dashboard/achievements-overview';
 import { AchievementsList } from '@/components/dashboard/achievements-list';
 import { BadgesList } from '@/components/dashboard/badges-list';
 import { AchievementNotification } from '@/components/dashboard/achievement-notification';
@@ -163,13 +162,9 @@ export default function Dashboard() {
                 {/* Stats Overview */}
                 {dashboardStats && <StatsOverview stats={dashboardStats.statistics} />}
 
-                {/* Current Badge & Achievements Overview */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Current Badge */}
+                {/* Current Badge */}
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
                     {dashboardData && <CurrentBadge user={dashboardData.user} />}
-
-                    {/* Achievements Summary */}
-                    {dashboardData && <AchievementsOverview achievements={dashboardData.achievements} />}
                 </div>
 
                 {/* Detailed Sections */}

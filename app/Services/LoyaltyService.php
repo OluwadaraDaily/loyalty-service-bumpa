@@ -111,9 +111,9 @@ class LoyaltyService
 
             $newProgress = $this->calculateAchievementProgress($user, $achievement, $purchase);
             
-            if ($newProgress >= $achievement->threshold) {
+            if ($newProgress >= $achievement->points_required) {
                 $userAchievement->update([
-                    'progress' => $achievement->threshold,
+                    'progress' => $achievement->points_required,
                     'unlocked' => true,
                     'unlocked_at' => now()
                 ]);
@@ -245,12 +245,12 @@ class LoyaltyService
                 'id' => $achievement->id,
                 'name' => $achievement->name,
                 'description' => $achievement->description,
-                'threshold' => $achievement->threshold,
+                'points_required' => $achievement->points_required,
                 'progress' => $userAchievement ? $userAchievement->progress : 0,
                 'unlocked' => $userAchievement ? $userAchievement->unlocked : false,
                 'unlocked_at' => $userAchievement ? $userAchievement->unlocked_at : null,
-                'progress_percentage' => $achievement->threshold > 0 
-                    ? round((($userAchievement ? $userAchievement->progress : 0) / $achievement->threshold) * 100, 2)
+                'progress_percentage' => $achievement->points_required > 0 
+                    ? round((($userAchievement ? $userAchievement->progress : 0) / $achievement->points_required) * 100, 2)
                     : 0
             ];
         })->toArray();
