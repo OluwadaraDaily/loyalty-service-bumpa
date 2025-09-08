@@ -12,11 +12,18 @@ class CheckRole
     public function handle(Request $request, Closure $next, string $role): Response
     {
         if (! Auth::check()) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return redirect()->route('login');
         }
 
-        if (Auth::user()->role !== $role) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        $user = Auth::user();
+        
+        if ($user->role !== $role) {
+            // Redirect based on user's actual role
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            } else {
+                return redirect()->route('dashboard');
+            }
         }
 
         return $next($request);
