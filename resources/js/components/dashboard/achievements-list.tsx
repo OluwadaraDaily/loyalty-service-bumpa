@@ -31,7 +31,8 @@ export function AchievementsList({ achievements }: AchievementsListProps) {
                                         achievement.unlocked
                                             ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
                                             : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950'
-                                    }`}
+                                        }`}
+                                    data-cy="achievement-card"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
@@ -40,7 +41,7 @@ export function AchievementsList({ achievements }: AchievementsListProps) {
                                             <div className="mt-2">
                                                 <div className="mb-1 flex items-center justify-between">
                                                     <span className="text-sm">Progress</span>
-                                                    <span className="text-sm font-medium">
+                                                    <span className="text-sm font-medium" data-cy="achievement-progress">
                                                         {achievement.progress}/{achievement.points_required} ({achievement.progress_percentage}%)
                                                     </span>
                                                 </div>

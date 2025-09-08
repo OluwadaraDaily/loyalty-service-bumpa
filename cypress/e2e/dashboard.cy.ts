@@ -75,21 +75,25 @@ describe('Dashboard E2E Tests', () => {
     it('should show achievement progress correctly', () => {
       cy.wait('@getDashboardData');
       
-      // Check for achievement progress indicators
-      cy.get('[role="generic"]').should('contain', '/');
-      cy.get('[role="generic"]').should('contain', '%');
+      // Wait for achievements to load
+      cy.contains('All Achievements').should('be.visible');
+      
+      // Check for achievement progress indicators using class selectors
+      cy.get('.rounded-lg.border.p-4').first().should('be.visible');
+      cy.get('.rounded-lg.border.p-4').first().should('contain', '/');
+      cy.get('.rounded-lg.border.p-4').first().should('contain', '%');
       
       // Check progress bars are present
-      cy.get('.h-2.rounded-full').should('have.length.greaterThan', 0);
+      cy.get('.h-2').should('have.length.greaterThan', 0);
     });
 
     it('should display stats with proper formatting', () => {
       cy.wait('@getDashboardStats');
       
       // Check that numbers are displayed (exact values depend on test data)
-      cy.get('[data-testid="app-layout"]').within(() => {
+      cy.get('[data-slot="sidebar-wrapper"]').within(() => {
         cy.contains(/\d+/).should('be.visible'); // Total purchases count
-        cy.contains(/\$\d+/).should('be.visible'); // Money amounts
+        cy.contains(/₦\d+/).should('be.visible'); // Money amounts (Nigerian Naira)
       });
     });
   });
@@ -163,8 +167,8 @@ describe('Dashboard E2E Tests', () => {
     it('should display correct breadcrumbs', () => {
       cy.wait('@getDashboardData');
       
-      // Check breadcrumb navigation
-      cy.get('[data-testid="breadcrumbs"]').should('contain', 'Dashboard');
+      // Check breadcrumb navigation using data-slot from ui/breadcrumb.tsx
+      cy.get('[data-slot="breadcrumb"]').should('contain', 'Dashboard');
     });
 
     it('should maintain state when navigating within dashboard', () => {

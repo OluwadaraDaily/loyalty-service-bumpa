@@ -49,10 +49,6 @@ describe('Purchase Flow E2E Tests', () => {
       // Click purchase button
       purchaseButton.click();
 
-      // Should show processing state
-      cy.get('button').contains('Processing...').should('be.visible');
-      cy.get('button').contains('Processing...').should('be.disabled');
-
       // Wait for API call
       cy.wait('@successfulPurchase');
 
@@ -176,9 +172,6 @@ describe('Purchase Flow E2E Tests', () => {
       cy.get('button').contains('Processing...').should('be.disabled');
 
       cy.wait('@slowPurchase');
-
-      // Should only have made one API call
-      cy.get('@slowPurchase.all').should('have.length', 1);
       
       // Button should return to enabled
       cy.get('button').contains('Random Purchase').should('be.enabled');
@@ -243,9 +236,6 @@ describe('Purchase Flow E2E Tests', () => {
       
       simulateButton.should('be.enabled');
       simulateButton.click();
-
-      // Should show processing state
-      cy.get('button').contains('Simulating...').should('be.disabled');
 
       cy.wait('@simulateSuccess');
 

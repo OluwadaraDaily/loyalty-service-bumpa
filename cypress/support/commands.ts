@@ -77,8 +77,8 @@ Cypress.Commands.add('waitForInertia', () => {
   // Wait for Inertia to finish loading
   cy.get('body').should('not.have.class', 'inertia-loading');
   
-  // Wait for React to finish rendering
-  cy.get('[data-cy="app-layout"]', { timeout: 10000 }).should('be.visible');
+  // Wait for the page to be ready (don't assume app-layout exists on all pages)
+  cy.url().should('not.contain', '/login');
 });
 
 // Database seeding
@@ -111,8 +111,8 @@ beforeEach(() => {
   cy.intercept('GET', '/sanctum/csrf-cookie', { statusCode: 204 }).as('csrfCookie');
   
   // Intercept dashboard data requests
-  cy.intercept('GET', '/api/users/*/achievements').as('getDashboardData');
-  cy.intercept('GET', '/api/users/*/dashboard-stats').as('getDashboardStats');
+  cy.intercept('GET', '/api/users/*/achievements', { fixture: 'dashboard-data.json' }).as('getDashboardData');
+  cy.intercept('GET', '/api/users/*/dashboard-stats', { fixture: 'dashboard-stats.json' }).as('getDashboardStats');
   
   // Intercept action requests
   cy.intercept('POST', '/api/users/*/purchase').as('purchase');
