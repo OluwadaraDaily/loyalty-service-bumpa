@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: loyalty-service
+    env: php
+    region: oregon
+    plan: starter
+    buildCommand: ./deploy.sh
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://loyalty-service.onrender.com
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: loyalty-service-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: loyalty-service-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: loyalty-service-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: loyalty-service-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: loyalty-service-db
+          property: password
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: loyalty-service.onrender.com
+      - key: SESSION_DOMAIN
+        value: .loyalty-service.onrender.com
+
+databases:
+  - name: loyalty-service-db
+    databaseName: loyalty_service
+    user: loyalty_user
+    plan: starter
