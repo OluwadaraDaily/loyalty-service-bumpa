@@ -26,6 +26,7 @@ export function NavUser() {
                         className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
                         align="end"
                         side={isMobile ? 'bottom' : state === 'collapsed' ? 'left' : 'bottom'}
+                        data-cy="user-dropdown-menu"
                     >
                         <UserMenuContent user={auth.user} />
                     </DropdownMenuContent>

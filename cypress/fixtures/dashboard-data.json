@@ -1,0 +1,50 @@
+{
+  "user": {
+    "id": 1,
+    "name": "Test Customer",
+    "email": "customer@example.com",
+    "current_badge": {
+      "id": 1,
+      "name": "Bronze Member",
+      "icon_url": null
+    }
+  },
+  "achievements": [
+    {
+      "id": 1,
+      "name": "First Purchase",
+      "description": "Make your first purchase",
+      "points_required": 100,
+      "progress": 100,
+      "progress_percentage": 100,
+      "unlocked": true,
+      "unlocked_at": "2024-01-01T00:00:00Z",
+      "badges": []
+    },
+    {
+      "id": 2,
+      "name": "Big Spender",
+      "description": "Spend ₦10,000",
+      "points_required": 1000,
+      "progress": 500,
+      "progress_percentage": 50,
+      "unlocked": false,
+      "unlocked_at": null,
+      "badges": []
+    }
+  ],
+  "badges": [
+    {
+      "id": 1,
+      "name": "Bronze Member",
+      "description": "Welcome to the loyalty program",
+      "icon_url": null,
+      "type": "membership",
+      "points_required": 0,
+      "progress": 100,
+      "progress_percentage": 100,
+      "unlocked": true,
+      "unlocked_at": "2024-01-01T00:00:00Z"
+    }
+  ]
+}

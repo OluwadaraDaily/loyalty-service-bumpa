@@ -19,6 +19,7 @@ const api = axios.create({
         'X-Requested-With': 'XMLHttpRequest',
     },
     withCredentials: true,
+    timeout: 10000, // 10 second timeout to match Cypress config
 });
 
 // Request interceptor to handle CSRF tokens and authentication
@@ -58,9 +59,28 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
+        // Handle network errors (no response received)
+        if (!error.response) {
+            if (error.code === 'ECONNABORTED') {
+                console.error('Request timeout');
+            } else if (error.code === 'ERR_NETWORK') {
+                console.error('Network error - unable to connect to server');
+            } else if (error.message === 'Network Error') {
+                console.error('Network error occurred');
+            } else {
+                console.error('Request failed:', error.message);
+            }
+            // Return a standardized error for network issues
+            const networkError = new Error('Network connection failed. Please check your internet connection and try again.');
+            networkError.name = 'NetworkError';
+            return Promise.reject(networkError);
+        }
+        
+        // Handle HTTP response errors
         if (error.response?.status === 401) {
-            // Handle unauthorized access
-            console.error('Unauthorized access - consider redirecting to login');
+            // Handle unauthorized access - redirect to login
+            console.error('Unauthorized access - redirecting to login');
+            window.location.href = '/login';
         } else if (error.response?.status >= 500) {
             // Handle server errors
             console.error('Server error:', error.response?.data);

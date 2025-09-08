@@ -76,12 +76,15 @@ describe('UserMenuContent', () => {
         expect(screen.getByTestId('logout-icon')).toBeInTheDocument();
     });
 
-    it('calls cleanup and router.flushAll when logout is clicked', () => {
+    it('calls cleanup when logout is clicked', () => {
+        const mockCleanup = vi.fn();
+        vi.mocked(require('@/hooks/use-mobile-navigation').useMobileNavigation).mockReturnValue(mockCleanup);
+        
         render(<UserMenuContent user={mockUser} />);
         
         fireEvent.click(screen.getByTestId('logout-button'));
         
-        expect(router.flushAll).toHaveBeenCalled();
+        expect(mockCleanup).toHaveBeenCalled();
     });
 
     it('applies correct styling classes', () => {

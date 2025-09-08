@@ -20,6 +20,21 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
+        // Create admin test accounts
+        User::factory()->create([
+            'name' => 'Admin User 1',
+            'email' => 'admin1@example.com',
+            'role' => 'admin',
+            'password' => bcrypt('admin123'),
+        ]);
+
+        User::factory()->create([
+            'name' => 'Admin User 2', 
+            'email' => 'admin2@example.com',
+            'role' => 'admin',
+            'password' => bcrypt('admin123'),
+        ]);
+
         $this->call([
             LoyaltySystemSeeder::class,
         ]);
