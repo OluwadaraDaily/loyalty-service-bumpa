@@ -33,6 +33,7 @@ docker-compose exec backend php artisan migrate
 
 ### Setup & Deployment
 - **[Backend Setup](README-Backend.md)** - Laravel API setup, testing, and architecture
+- **[API Documentation](API-DOCUMENTATION.md)** - Complete REST API reference with examples
 - **[Frontend Setup](README-Frontend.md)** - React application setup, testing, and features  
 - **[Docker Infrastructure](README-Docker.md)** - Complete Docker setup with MySQL, Kafka, Redis, and Nginx
 

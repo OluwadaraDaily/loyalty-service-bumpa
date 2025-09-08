@@ -1,6 +1,6 @@
 # Loyalty Service - Backend API
 
-Documentation for Backend
+Backend documentation covering architecture, setup, and testing. For complete API endpoint documentation, see [API-DOCUMENTATION.md](API-DOCUMENTATION.md).
 
 ## Design Choices
 
