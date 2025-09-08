@@ -86,7 +86,7 @@ export const useDashboardData = (userId: number) => {
         fetchData();
     }, [fetchData]);
 
-    return { data, loading, error, refetch: fetchData };
+    return { data, isLoading: loading, error, refetch: fetchData };
 };
 
 export const useDashboardStats = (userId: number) => {
@@ -112,7 +112,7 @@ export const useDashboardStats = (userId: number) => {
         fetchData();
     }, [fetchData]);
 
-    return { data, loading, error, refetch: fetchData };
+    return { data, isLoading: loading, error, refetch: fetchData };
 };
 
 export const useSimulateAchievement = (userId: number, onSuccess?: () => void) => {
@@ -143,11 +143,13 @@ export const useSimulateAchievement = (userId: number, onSuccess?: () => void) =
 export const usePurchaseProduct = (userId: number, onSuccess?: () => void) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
+    const [success, setSuccess] = useState(false);
 
     const mutate = useCallback(async (product: Product) => {
         try {
             setLoading(true);
             setError(null);
+            setSuccess(false);
             const purchaseData = {
                 user_id: userId,
                 amount: product.amount,
@@ -166,6 +168,7 @@ export const usePurchaseProduct = (userId: number, onSuccess?: () => void) => {
             };
 
             const response = await api.post(`/users/${userId}/purchase`, purchaseData);
+            setSuccess(true);
             onSuccess?.();
             return response.data;
         } catch (err) {
@@ -178,5 +181,5 @@ export const usePurchaseProduct = (userId: number, onSuccess?: () => void) => {
         }
     }, [userId, onSuccess]);
 
-    return { mutate, loading, error };
+    return { mutate, isPending: loading, isError: !!error, isSuccess: success, error };
 };

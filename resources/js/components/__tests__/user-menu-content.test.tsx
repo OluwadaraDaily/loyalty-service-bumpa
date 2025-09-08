@@ -21,8 +21,9 @@ vi.mock('@inertiajs/react', () => ({
 }));
 
 // Mock hooks
+const mockCleanupFn = vi.fn();
 vi.mock('@/hooks/use-mobile-navigation', () => ({
-    useMobileNavigation: () => vi.fn(),
+    useMobileNavigation: vi.fn(() => mockCleanupFn),
 }));
 
 // Mock UserInfo component
@@ -77,14 +78,11 @@ describe('UserMenuContent', () => {
     });
 
     it('calls cleanup when logout is clicked', () => {
-        const mockCleanup = vi.fn();
-        vi.mocked(require('@/hooks/use-mobile-navigation').useMobileNavigation).mockReturnValue(mockCleanup);
-        
         render(<UserMenuContent user={mockUser} />);
         
         fireEvent.click(screen.getByTestId('logout-button'));
         
-        expect(mockCleanup).toHaveBeenCalled();
+        expect(mockCleanupFn).toHaveBeenCalled();
     });
 
     it('applies correct styling classes', () => {

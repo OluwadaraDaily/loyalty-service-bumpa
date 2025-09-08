@@ -104,15 +104,20 @@ describe('Hooks-Components Integration Tests', () => {
         function PurchaseTestComponent() {
             const purchaseMutation = usePurchaseProduct(1);
 
-            const handlePurchase = () => {
-                purchaseMutation.mutate({
-                    id: 'test-product',
-                    name: 'Test Product',
-                    category: 'Test',
-                    amount: 1000,
-                    currency: 'NGN',
-                    description: 'Test product',
-                });
+            const handlePurchase = async () => {
+                try {
+                    await purchaseMutation.mutate({
+                        id: 'test-product',
+                        name: 'Test Product',
+                        category: 'Test',
+                        amount: 1000,
+                        currency: 'NGN',
+                        description: 'Test product',
+                    });
+                } catch (error) {
+                    // Error is handled by the hook's error state
+                    console.log('Purchase failed:', error);
+                }
             };
 
             return (
