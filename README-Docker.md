@@ -51,8 +51,7 @@ This project includes a complete Docker Compose setup for local development and 
 ## Service Access
 
 - **Application (via Nginx)**: <http://localhost>
-- **Backend API**: <http://localhost:8000>
-- **Frontend**: <http://localhost:3000>
+- **Application**: <http://localhost:8000>
 - **MySQL**: localhost:3306
 - **Kafka**: localhost:9092
 - **Kafka UI**: <http://localhost:8080>
